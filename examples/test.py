@@ -1,3 +1,3 @@
-from electron_integral_playground.geometry_reader.xyz_reader import debug_print
+from electron_integral_playground.molecular_integral.test import debug_print
 
 debug_print()
