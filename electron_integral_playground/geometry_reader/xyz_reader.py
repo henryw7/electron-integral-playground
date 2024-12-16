@@ -6,7 +6,7 @@ import numpy as np
 from electron_integral_playground.geometry import Molecule
 from electron_integral_playground.units import LengthUnits, angstrom_to_bohr
 
-def read_xyz_content(xyz_file_lines: List[str], unit = LengthUnits.ANGSTROM):
+def read_xyz_content(xyz_file_lines: List[str], unit: LengthUnits = LengthUnits.ANGSTROM):
     assert len(xyz_file_lines) >= 2
     n_atom = int(xyz_file_lines[0])
     assert n_atom > 0
@@ -30,7 +30,7 @@ def read_xyz_content(xyz_file_lines: List[str], unit = LengthUnits.ANGSTROM):
 
     return Molecule(elements = atom_types, geometry = atom_coordinates)
 
-def read_xyz_file(xyz_filename: str, unit = LengthUnits.ANGSTROM):
+def read_xyz_file(xyz_filename: str, unit: LengthUnits = LengthUnits.ANGSTROM):
     xyz_file = open(xyz_filename)
     xyz_file_lines = xyz_file.readlines()
     xyz_file.close()
