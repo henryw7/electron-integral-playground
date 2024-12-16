@@ -1,12 +1,10 @@
 
-from typing import List
-
 import numpy as np
 
 from electron_integral_playground.geometry import Molecule
 from electron_integral_playground.units import LengthUnits, angstrom_to_bohr
 
-def read_xyz_content(xyz_file_lines: List[str], unit: LengthUnits = LengthUnits.ANGSTROM):
+def read_xyz_content(xyz_file_lines: list[str], unit: LengthUnits = LengthUnits.ANGSTROM) -> Molecule:
     assert len(xyz_file_lines) >= 2
     n_atom = int(xyz_file_lines[0])
     assert n_atom > 0

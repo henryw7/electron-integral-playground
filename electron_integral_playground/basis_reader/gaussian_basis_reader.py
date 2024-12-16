@@ -1,13 +1,11 @@
 
-from typing import List
-
 from pathlib import Path
 import numpy as np
 
 from electron_integral_playground.basis import GaussianShell, angular_letter_to_l_value
 from electron_integral_playground.data import basis_sets_path
 
-def read_basis_content(basis_file_lines: List[str]):
+def read_basis_content(basis_file_lines: list[str]) -> dict[str, GaussianShell]:
     basis_set = {}
     current_atom = None
     current_orbitals = None
