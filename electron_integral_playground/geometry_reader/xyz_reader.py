@@ -28,7 +28,7 @@ def read_xyz_content(xyz_file_lines: list[str], unit: LengthUnits = LengthUnits.
 
     return Molecule(elements = atom_types, geometry = atom_coordinates)
 
-def read_xyz_file(xyz_filename: str, unit: LengthUnits = LengthUnits.ANGSTROM):
+def read_xyz_file(xyz_filename: str, unit: LengthUnits = LengthUnits.ANGSTROM) -> Molecule:
     xyz_file = open(xyz_filename)
     xyz_file_lines = xyz_file.readlines()
     xyz_file.close()

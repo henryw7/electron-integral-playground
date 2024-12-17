@@ -8,7 +8,7 @@ from electron_integral_playground.geometry_reader.xyz_reader import read_xyz_fil
 from electron_integral_playground.geometry import Molecule
 from electron_integral_playground.units import angstrom_to_bohr
 
-XYZ_READ_THRESHOLD = 1e-16
+xyz_read_threshold = 1e-16
 
 def test_read_xyz_file():
     xyz_filename = molecules_path / "h2o2.xyz"
@@ -20,4 +20,4 @@ def test_read_xyz_file():
                                    [ 0.0000, -0.7375, -0.0528],
                                    [ 0.8190,  0.8170,  0.4220],
                                    [-0.8190, -0.8170,  0.4220],]) * angstrom_to_bohr
-    np.testing.assert_allclose(molecule.geometry, reference_geometry, atol = XYZ_READ_THRESHOLD)
+    np.testing.assert_allclose(molecule.geometry, reference_geometry, atol = xyz_read_threshold)
