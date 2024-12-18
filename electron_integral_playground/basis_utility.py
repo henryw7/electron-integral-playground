@@ -1,17 +1,11 @@
 
-from dataclasses import dataclass
+from enum import Enum
 
 import numpy as np
 from math import factorial
+from copy import deepcopy
 
-@dataclass
-class GaussianShell:
-    angular: int
-    spherical: bool
-    i_ao_start: int
-    i_atom: int
-    primitive_exponents: np.ndarray
-    primitive_coefficients: np.ndarray
+from electron_integral_playground.data_structure import GaussianShell, Molecule
 
 angular_letter_to_l_value_map = { "S":0, "P":1, "D":2, "F":3, "G":4, "H":5, "I":6 }
 def angular_letter_to_l_value(letter: str) -> int:
@@ -19,6 +13,52 @@ def angular_letter_to_l_value(letter: str) -> int:
     letter = letter.upper()
     assert letter in angular_letter_to_l_value_map
     return angular_letter_to_l_value_map[letter]
+
+def n_ao_of_angular(l: int, spherical: bool = True) -> int:
+    if spherical:
+        return 2 * l + 1
+    else:
+        return (l + 1) * (l + 2) // 2
+
+def attach_basis_to_molecule(molecule: Molecule, basis_set: dict[str, list[GaussianShell]]) -> int:
+    basis_set_actually_used = {}
+    for element in molecule.elements:
+        assert element in basis_set
+        if element not in basis_set_actually_used:
+            basis_set_actually_used[element] = basis_set[element]
+
+    for element in basis_set_actually_used:
+        for basis in basis_set_actually_used[element]:
+            normalize_shell(basis)
+
+    assert (molecule.basis_shells is None) or (not molecule.basis_shells)
+    molecule.basis_shells = []
+    for i_atom, element in enumerate(molecule.elements):
+        basis_set = deepcopy(basis_set_actually_used[element])
+        for basis in basis_set:
+            basis.i_atom = i_atom
+        molecule.basis_shells.extend(basis_set)
+
+    return assign_ao_index_to_shell(molecule)
+
+class AtomicOrbitalOrder(Enum):
+    ATOM_LEADING = 1
+    ANGULAR_LEADING = 2
+
+def assign_ao_index_to_shell(molecule: Molecule, ao_order: AtomicOrbitalOrder = AtomicOrbitalOrder.ATOM_LEADING) -> int:
+    assert len(molecule.basis_shells) > 0
+    if ao_order == AtomicOrbitalOrder.ATOM_LEADING:
+        molecule.basis_shells.sort(key = lambda shell: shell.i_atom)
+    elif ao_order == AtomicOrbitalOrder.ANGULAR_LEADING:
+        molecule.basis_shells.sort(key = lambda shell: shell.angular)
+    else:
+        raise NotImplementedError(f"Unsupported atomic orbital order {ao_order}")
+    current_offset = 0
+    for shell in molecule.basis_shells:
+        shell.i_ao_start = current_offset
+        current_offset += n_ao_of_angular(shell.angular, shell.spherical)
+    n_ao = current_offset
+    return n_ao
 
 def normalize_shell(shell: GaussianShell) -> None:
     """

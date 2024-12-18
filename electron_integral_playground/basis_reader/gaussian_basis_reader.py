@@ -2,10 +2,11 @@
 from pathlib import Path
 import numpy as np
 
-from electron_integral_playground.basis import GaussianShell, angular_letter_to_l_value
+from electron_integral_playground.basis_utility import angular_letter_to_l_value
+from electron_integral_playground.data_structure import GaussianShell
 from electron_integral_playground.data import basis_sets_path
 
-def read_basis_content(basis_file_lines: list[str]) -> dict[str, GaussianShell]:
+def read_basis_content(basis_file_lines: list[str]) -> dict[str, list[GaussianShell]]:
     basis_set = {}
     current_atom = None
     current_orbitals = None
@@ -90,13 +91,13 @@ def read_basis_content(basis_file_lines: list[str]) -> dict[str, GaussianShell]:
 
     return basis_set
 
-def read_basis_file(basis_filename: str) -> dict[str, GaussianShell]:
+def read_basis_file(basis_filename: str) -> dict[str, list[GaussianShell]]:
     basis_file = open(basis_filename)
     basis_file_lines = basis_file.readlines()
     basis_file.close()
     return read_basis_content(basis_file_lines)
 
-def read_basis(basis_name: str) -> dict[str, GaussianShell]:
+def read_basis(basis_name: str) -> dict[str, list[GaussianShell]]:
     basis_filename = basis_name.lower() + ".gaussian.basis"
     basis_filepath = basis_sets_path / basis_filename
     assert Path(basis_filepath).is_file(), f"Basis {basis_name} not in the basis set database {basis_sets_path}"

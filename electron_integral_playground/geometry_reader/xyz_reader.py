@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from electron_integral_playground.geometry import Molecule
+from electron_integral_playground.data_structure import Molecule
 from electron_integral_playground.units import LengthUnits, angstrom_to_bohr
 
 def read_xyz_content(xyz_file_lines: list[str], unit: LengthUnits = LengthUnits.ANGSTROM) -> Molecule:
@@ -26,7 +26,11 @@ def read_xyz_content(xyz_file_lines: list[str], unit: LengthUnits = LengthUnits.
     else:
         raise NotImplementedError(f"Unsupported unit {unit}")
 
-    return Molecule(elements = atom_types, geometry = atom_coordinates)
+    return Molecule(
+        elements = atom_types,
+        geometry = atom_coordinates,
+        basis_shells = None,
+    )
 
 def read_xyz_file(xyz_filename: str, unit: LengthUnits = LengthUnits.ANGSTROM) -> Molecule:
     xyz_file = open(xyz_filename)
