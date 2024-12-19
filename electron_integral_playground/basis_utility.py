@@ -66,7 +66,7 @@ def normalize_shell(shell: GaussianShell) -> None:
     For a non-S shell, the primitive are normalized according to the Cartesian pure x component (px, dxx, fxxx, gxxxx, etc.).
     This operation is idempotent.
     """
-    """
+    r"""
     For a contracted Gaussian function
     $$\phi(\vec{r}; \vec{i}, \vec{A}) = \sum_m^{n_{contract}} C_m^{contract} \chi(\vec{r}; \vec{i}, a_m, \vec{A})$$
     where $\chi(\vec{r})$ is an un-normalized primitive Gaussian function

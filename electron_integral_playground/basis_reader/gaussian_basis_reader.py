@@ -14,20 +14,20 @@ def read_basis_content(basis_file_lines: list[str]) -> dict[str, list[GaussianSh
     primitive_list = None
     angular_letter = None
     for line in basis_file_lines:
-        if line.startswith("!"):
-            continue # Comment
         if "ECP" in line:
             raise NotImplementedError("ECP not supported")
-        if line.startswith("****"):
+        fields = line.split()
+        if not fields:
+            continue # Empty line
+        if fields[0].startswith("!"):
+            continue # Comment
+        if fields[0].startswith("****"):
             assert current_atom is not None
             assert current_orbitals is not None
             basis_set[current_atom] = current_orbitals
             current_atom = None
             current_orbitals = None
             continue
-        fields = line.split()
-        if not fields:
-            continue # Empty line
         if current_orbitals is None:
             assert len(fields) == 2 and fields[1] == "0"
             current_atom = fields[0]
