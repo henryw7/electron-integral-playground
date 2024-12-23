@@ -12,8 +12,33 @@ class GaussianShell:
     primitive_exponents: np.ndarray
     primitive_coefficients: np.ndarray
 
+type BasisSet = dict[str, list[GaussianShell]]
+
 @dataclass
 class Molecule:
     elements: list[str]
     geometry: np.ndarray # Bohr
     basis_shells: list[GaussianShell]
+    n_ao: int
+
+@dataclass
+class PrimitivePair:
+    i_shell: int
+    j_shell: int
+    i_primitive: int
+    j_primitive: int
+    upper_bound: float
+
+type PrimitivePairList = map[tuple[int, int], list[PrimitivePair]]
+
+@dataclass
+class PrimitivePairCInterfaceBundle:
+    P_p: np.ndarray
+    A_a: np.ndarray
+    B_b: np.ndarray
+    coefficient: np.ndarray
+    i_ao_start: np.ndarray
+    j_ao_start: np.ndarray
+    i_atom: np.ndarray
+    j_atom: np.ndarray
+    spherical: np.ndarray

@@ -30,6 +30,7 @@ def read_xyz_content(xyz_file_lines: list[str], unit: LengthUnits = LengthUnits.
         elements = atom_types,
         geometry = atom_coordinates,
         basis_shells = None,
+        n_ao = -1,
     )
 
 def read_xyz_file(xyz_filename: str, unit: LengthUnits = LengthUnits.ANGSTROM) -> Molecule:

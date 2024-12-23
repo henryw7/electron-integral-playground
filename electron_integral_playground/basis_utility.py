@@ -5,7 +5,7 @@ import numpy as np
 from math import factorial
 from copy import deepcopy
 
-from electron_integral_playground.data_structure import GaussianShell, Molecule
+from electron_integral_playground.data_structure import GaussianShell, Molecule, BasisSet
 
 angular_letter_to_l_value_map = { "S":0, "P":1, "D":2, "F":3, "G":4, "H":5, "I":6 }
 def angular_letter_to_l_value(letter: str) -> int:
@@ -20,7 +20,7 @@ def n_ao_of_angular(l: int, spherical: bool = True) -> int:
     else:
         return (l + 1) * (l + 2) // 2
 
-def attach_basis_to_molecule(molecule: Molecule, basis_set: dict[str, list[GaussianShell]]) -> int:
+def attach_basis_to_molecule(molecule: Molecule, basis_set: BasisSet) -> int:
     basis_set_actually_used = {}
     for element in molecule.elements:
         assert element in basis_set
@@ -45,7 +45,7 @@ class AtomicOrbitalOrder(Enum):
     ATOM_LEADING = 1
     ANGULAR_LEADING = 2
 
-def assign_ao_index_to_shell(molecule: Molecule, ao_order: AtomicOrbitalOrder = AtomicOrbitalOrder.ATOM_LEADING) -> int:
+def assign_ao_index_to_shell(molecule: Molecule, ao_order: AtomicOrbitalOrder = AtomicOrbitalOrder.ATOM_LEADING) -> None:
     assert len(molecule.basis_shells) > 0
     if ao_order == AtomicOrbitalOrder.ATOM_LEADING:
         molecule.basis_shells.sort(key = lambda shell: shell.i_atom)
@@ -57,8 +57,7 @@ def assign_ao_index_to_shell(molecule: Molecule, ao_order: AtomicOrbitalOrder = 
     for shell in molecule.basis_shells:
         shell.i_ao_start = current_offset
         current_offset += n_ao_of_angular(shell.angular, shell.spherical)
-    n_ao = current_offset
-    return n_ao
+    molecule.n_ao = current_offset
 
 def normalize_shell(shell: GaussianShell) -> None:
     """
@@ -93,6 +92,7 @@ def normalize_shell(shell: GaussianShell) -> None:
     $$C^{normalize} = \left( \sum_{m, n}^{n_{contract}} C_m^{contract} C_n^{contract} \left(\frac{\pi}{a_m + a_n}\right)^{3/2} \frac{(2L)!}{4^L (a_m + a_n)^L L!} \right)^{-1/2}$$
     will normalize the contracted Gaussian function.
     """
+
     assert type(shell.primitive_exponents) is np.ndarray
     assert type(shell.primitive_coefficients) is np.ndarray
     assert shell.primitive_exponents.ndim == 1

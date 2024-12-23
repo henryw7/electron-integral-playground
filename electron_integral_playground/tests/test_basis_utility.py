@@ -95,7 +95,7 @@ def test_basis_assignment_low_angular():
         """.split("\n")
     )
     basis_set = read_basis("3-21g")
-    n_ao = attach_basis_to_molecule(molecule, basis_set)
+    attach_basis_to_molecule(molecule, basis_set)
 
     reference_angular_list = [ 0,0,1,0,1, 0,0, 0,0,1,0,1 ]
     reference_i_atom_list = [ 0,0,0,0,0, 1,1, 2,2,2,2,2 ]
@@ -106,9 +106,9 @@ def test_basis_assignment_low_angular():
         assert shell.angular == reference_angular_list[i_shell]
         assert shell.i_atom == reference_i_atom_list[i_shell]
         assert shell.i_ao_start == reference_i_ao_start_list[i_shell]
-    assert n_ao == reference_n_ao
+    assert molecule.n_ao == reference_n_ao
 
-    n_ao = assign_ao_index_to_shell(molecule, AtomicOrbitalOrder.ANGULAR_LEADING)
+    assign_ao_index_to_shell(molecule, AtomicOrbitalOrder.ANGULAR_LEADING)
 
     reference_angular_list = [ 0,0,0, 0,0, 0,0,0, 1,1, 1,1 ]
     reference_i_atom_list = [ 0,0,0, 1,1, 2,2,2, 0,0, 2,2 ]
@@ -119,7 +119,7 @@ def test_basis_assignment_low_angular():
         assert shell.angular == reference_angular_list[i_shell]
         assert shell.i_atom == reference_i_atom_list[i_shell]
         assert shell.i_ao_start == reference_i_ao_start_list[i_shell]
-    assert n_ao == reference_n_ao
+    assert molecule.n_ao == reference_n_ao
 
 def test_basis_assignment_high_angular():
     molecule = read_xyz_content(
@@ -131,7 +131,7 @@ def test_basis_assignment_high_angular():
         """.split("\n")
     )
     basis_set = read_basis("def2-tzvp")
-    n_ao = attach_basis_to_molecule(molecule, basis_set)
+    attach_basis_to_molecule(molecule, basis_set)
 
     reference_angular_list = [ 0,0,0,0,0,1,1,1,2,2,3, 0,0,0,1, 0,0,0,1 ]
     reference_i_atom_list = [ 0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1, 2,2,2,2 ]
@@ -142,11 +142,11 @@ def test_basis_assignment_high_angular():
         assert shell.angular == reference_angular_list[i_shell]
         assert shell.i_atom == reference_i_atom_list[i_shell]
         assert shell.i_ao_start == reference_i_ao_start_list[i_shell]
-    assert n_ao == reference_n_ao
+    assert molecule.n_ao == reference_n_ao
 
     for shell in molecule.basis_shells:
         shell.spherical = False
-    n_ao = assign_ao_index_to_shell(molecule, AtomicOrbitalOrder.ANGULAR_LEADING)
+    assign_ao_index_to_shell(molecule, AtomicOrbitalOrder.ANGULAR_LEADING)
 
     reference_angular_list = [ 0,0,0,0,0, 0,0,0, 0,0,0, 1,1,1, 1, 1, 2,2, 3 ]
     reference_i_atom_list = [ 0,0,0,0,0, 1,1,1, 2,2,2, 0,0,0, 1, 2, 0,0, 0 ]
@@ -157,4 +157,4 @@ def test_basis_assignment_high_angular():
         assert shell.angular == reference_angular_list[i_shell]
         assert shell.i_atom == reference_i_atom_list[i_shell]
         assert shell.i_ao_start == reference_i_ao_start_list[i_shell]
-    assert n_ao == reference_n_ao
+    assert molecule.n_ao == reference_n_ao
