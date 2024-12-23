@@ -32,7 +32,7 @@ class PrimitivePair:
 type PrimitivePairList = map[tuple[int, int], list[PrimitivePair]]
 
 @dataclass
-class PrimitivePairCInterfaceBundle:
+class PrimitivePairData:
     P_p: np.ndarray
     A_a: np.ndarray
     B_b: np.ndarray
@@ -41,4 +41,6 @@ class PrimitivePairCInterfaceBundle:
     j_ao_start: np.ndarray
     i_atom: np.ndarray
     j_atom: np.ndarray
-    spherical: np.ndarray
+    ij_spherical: np.ndarray
+
+type PrimitivePairDataAngularList = map[tuple[int, int], list[PrimitivePairData]]

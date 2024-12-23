@@ -11,7 +11,7 @@ def read_xyz_content(xyz_file_lines: list[str], unit: LengthUnits = LengthUnits.
     assert len(xyz_file_lines) >= n_atom + 2
 
     atom_types = [None] * n_atom
-    atom_coordinates = np.zeros((n_atom, 3))
+    atom_coordinates = np.empty((n_atom, 3))
     for i_atom in range(n_atom):
         line = xyz_file_lines[i_atom + 2]
         fields = line.split()

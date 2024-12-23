@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from electron_integral_playground.data_structure import Molecule, PrimitivePair, PrimitivePairList
+from electron_integral_playground.data_structure import Molecule, PrimitivePair, PrimitivePairList, PrimitivePairData, PrimitivePairDataAngularList
 
 def form_primitive_pair_list(molecule: Molecule, schwarz_upper_bound: float) -> PrimitivePairList:
     """
@@ -125,3 +125,58 @@ def form_primitive_pair_list(molecule: Molecule, schwarz_upper_bound: float) -> 
         pair_list[ij_angular].sort(key = lambda pair: pair.upper_bound, reverse = True) # Larger upper_bound comes first
 
     return pair_list
+
+def spherical_bool_pair_to_one_int(i_spherical: bool, j_spherical: bool) -> int:
+    return (2 if i_spherical else 0) + (1 if j_spherical else 0)
+
+def form_primitive_pair_data(molecule: Molecule, pair_list: PrimitivePairList) -> PrimitivePairDataAngularList:
+    assert molecule.basis_shells is not None and len(molecule.basis_shells) > 0
+    assert molecule.n_ao > 0
+
+    pair_data_list = {}
+    for ij_angular in pair_list:
+        n_pair = len(pair_list[ij_angular])
+        pair_data = PrimitivePairData(
+            P_p = np.empty((n_pair, 4), dtype = np.float64),
+            A_a = np.empty((n_pair, 4), dtype = np.float64),
+            B_b = np.empty((n_pair, 4), dtype = np.float64),
+            coefficient = np.empty(n_pair, dtype = np.float64),
+            i_ao_start = np.empty(n_pair, dtype = np.int32),
+            j_ao_start = np.empty(n_pair, dtype = np.int32),
+            i_atom = np.empty(n_pair, dtype = np.int32),
+            j_atom = np.empty(n_pair, dtype = np.int32),
+            ij_spherical = np.empty(n_pair, dtype = np.int32),
+        )
+        for i_pair in range(n_pair):
+            pair = pair_list[ij_angular][i_pair]
+            shell_i = molecule.basis_shells[pair.i_shell]
+            shell_j = molecule.basis_shells[pair.j_shell]
+            position_A = molecule.geometry[shell_i.i_atom, :]
+            position_B = molecule.geometry[shell_j.i_atom, :]
+            exponent_a = shell_i.primitive_exponents[pair.i_primitive]
+            exponent_b = shell_j.primitive_exponents[pair.j_primitive]
+            coefficient_A = shell_i.primitive_coefficients[pair.i_primitive]
+            coefficient_B = shell_j.primitive_coefficients[pair.j_primitive]
+
+            exponent_p = exponent_a + exponent_b
+            position_P = (exponent_a * position_A + exponent_b * position_B) / exponent_p
+            distance_AB = np.linalg.norm(position_A - position_B)
+            gaussian_AB = np.exp(-exponent_a * exponent_b / (exponent_a + exponent_b) * distance_AB)
+            total_coefficient = coefficient_A * coefficient_B * gaussian_AB
+
+            pair_data.A_a[i_pair, 0:3] = position_A
+            pair_data.A_a[i_pair, 3]   = exponent_a
+            pair_data.B_b[i_pair, 0:3] = position_B
+            pair_data.B_b[i_pair, 3]   = exponent_b
+            pair_data.P_p[i_pair, 0:3] = position_P
+            pair_data.P_p[i_pair, 3]   = exponent_p
+            pair_data.coefficient[i_pair] = total_coefficient
+            pair_data.i_ao_start[i_pair] = shell_i.i_ao_start
+            pair_data.j_ao_start[i_pair] = shell_j.i_ao_start
+            pair_data.i_atom[i_pair] = shell_i.i_atom
+            pair_data.j_atom[i_pair] = shell_j.i_atom
+            pair_data.ij_spherical[i_pair] = spherical_bool_pair_to_one_int(shell_i.spherical, shell_j.spherical)
+
+        pair_data_list[ij_angular] = pair_data
+
+    return pair_data_list
