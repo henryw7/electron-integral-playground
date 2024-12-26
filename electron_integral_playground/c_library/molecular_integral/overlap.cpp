@@ -50,7 +50,7 @@ static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_
 #pragma unroll
     for (int i = 0; i <= i_L; i++)
     {
-        E_ij_0[i * j_L + 0] = E_i0_t[lower_triangular_index(i, 0)];
+        E_ij_0[i * (j_L + 1) + 0] = E_i0_t[lower_triangular_index(i, 0)];
     }
 
 #pragma unroll
@@ -66,7 +66,7 @@ static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_
                 E_ij_0_temp += binomial_coefficient[lower_triangular_index(j, j - t)] * AB_power_j_minus_t * E_i0_t[lower_triangular_index(i + t, 0)];
                 AB_power_j_minus_t *= AB;
             }
-            E_ij_0[i * j_L + j] = E_ij_0_temp;
+            E_ij_0[i * (j_L + 1) + j] = E_ij_0_temp;
         }
     }
 }
@@ -124,7 +124,7 @@ static void overlap_general_kernel(const double A_a[4],
                     const int j_z = j_L - j_x - j_y;
                     const int j_density = (j_L - j_x) * (j_L - j_x + 1) / 2 + j_L - j_x - j_y;
 
-                    const double E_ij_xyz = E_x_ij_0[i_x * j_L + j_x] * E_y_ij_0[i_y * j_L + j_y] * E_z_ij_0[i_z * j_L + j_z];
+                    const double E_ij_xyz = E_x_ij_0[i_x * (j_L + 1) + j_x] * E_y_ij_0[i_y * (j_L + 1) + j_y] * E_z_ij_0[i_z * (j_L + 1) + j_z];
                     constexpr int n_density_j = (j_L + 1) * (j_L + 2) / 2;
                     S_cartesian[i_density * n_density_j + j_density] = coefficient * E_ij_xyz * pow(M_PI / p, 1.5);
                 }

@@ -86,8 +86,9 @@ def form_primitive_pair_list(molecule: Molecule, schwarz_upper_bound: float) -> 
 
             if i_angular > j_angular:
                 continue
-            if shell_i.i_ao_start > shell_j.i_ao_start:
-                continue
+            if i_angular == j_angular:
+                if shell_i.i_ao_start > shell_j.i_ao_start:
+                    continue
 
             for i_primitive in range(len(shell_i.primitive_exponents)):
                 exponent_a = shell_i.primitive_exponents[i_primitive]
