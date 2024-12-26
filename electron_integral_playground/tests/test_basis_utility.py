@@ -144,8 +144,7 @@ def test_basis_assignment_high_angular():
         assert shell.i_ao_start == reference_i_ao_start_list[i_shell]
     assert molecule.n_ao == reference_n_ao
 
-    for shell in molecule.basis_shells:
-        shell.spherical = False
+    molecule.spherical_basis = False
     assign_ao_index_to_shell(molecule, AtomicOrbitalOrder.ANGULAR_LEADING)
 
     reference_angular_list = [ 0,0,0,0,0, 0,0,0, 0,0,0, 1,1,1, 1, 1, 2,2, 3 ]

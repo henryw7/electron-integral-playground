@@ -15,6 +15,7 @@ def test_read_xyz_file():
     reference_elements = [ "O", "O", "H", "H" ]
     assert molecule.elements == reference_elements
     assert molecule.n_ao <= 0
+    assert molecule.spherical_basis
     reference_geometry = np.array([[ 0.0000,  0.7375, -0.0528],
                                    [ 0.0000, -0.7375, -0.0528],
                                    [ 0.8190,  0.8170,  0.4220],

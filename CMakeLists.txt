@@ -7,4 +7,4 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lib")
 
-add_subdirectory(electron_integral_playground/lib/molecular_integral)
+add_subdirectory(electron_integral_playground/c_library/molecular_integral)

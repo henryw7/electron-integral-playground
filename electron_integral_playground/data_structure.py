@@ -6,7 +6,6 @@ import numpy as np
 @dataclass
 class GaussianShell:
     angular: int
-    spherical: bool
     i_ao_start: int
     i_atom: int
     primitive_exponents: np.ndarray
@@ -20,6 +19,7 @@ class Molecule:
     geometry: np.ndarray # Bohr
     basis_shells: list[GaussianShell]
     n_ao: int
+    spherical_basis: bool
 
 @dataclass
 class PrimitivePair:
@@ -41,6 +41,5 @@ class PrimitivePairData:
     j_ao_start: np.ndarray
     i_atom: np.ndarray
     j_atom: np.ndarray
-    ij_spherical: np.ndarray
 
-type PrimitivePairDataAngularList = map[tuple[int, int], list[PrimitivePairData]]
+type PrimitivePairDataAngularList = map[tuple[int, int], PrimitivePairData]

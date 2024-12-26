@@ -84,6 +84,11 @@ def form_primitive_pair_list(molecule: Molecule, schwarz_upper_bound: float) -> 
 
             distance_AB = np.linalg.norm(position_A - position_B)
 
+            if i_angular > j_angular:
+                continue
+            if shell_i.i_ao_start > shell_j.i_ao_start:
+                continue
+
             for i_primitive in range(len(shell_i.primitive_exponents)):
                 exponent_a = shell_i.primitive_exponents[i_primitive]
                 coefficient_A = np.abs(shell_i.primitive_coefficients[i_primitive])
@@ -101,7 +106,7 @@ def form_primitive_pair_list(molecule: Molecule, schwarz_upper_bound: float) -> 
                     distance_AB -= np.sqrt(j_angular / 2.0 / exponent_b)
 
                     distance_AB = max(distance_AB, 0.0)
-                    gaussian_AB = np.exp(-exponent_a * exponent_b / (exponent_a + exponent_b) * distance_AB)
+                    gaussian_AB = np.exp(-exponent_a * exponent_b / (exponent_a + exponent_b) * distance_AB * distance_AB)
                     coefficient_AB = 2.0 * coefficient_A * coefficient_B
                     overlap_factor = np.power(np.pi / (exponent_a + exponent_b), 1.5)
                     schwarz_factor = np.power(np.pi / (exponent_a + exponent_b), 1.25) * np.power(2, 0.25)
@@ -126,9 +131,6 @@ def form_primitive_pair_list(molecule: Molecule, schwarz_upper_bound: float) -> 
 
     return pair_list
 
-def spherical_bool_pair_to_one_int(i_spherical: bool, j_spherical: bool) -> int:
-    return (2 if i_spherical else 0) + (1 if j_spherical else 0)
-
 def form_primitive_pair_data(molecule: Molecule, pair_list: PrimitivePairList) -> PrimitivePairDataAngularList:
     assert molecule.basis_shells is not None and len(molecule.basis_shells) > 0
     assert molecule.n_ao > 0
@@ -137,15 +139,14 @@ def form_primitive_pair_data(molecule: Molecule, pair_list: PrimitivePairList) -
     for ij_angular in pair_list:
         n_pair = len(pair_list[ij_angular])
         pair_data = PrimitivePairData(
-            P_p = np.empty((n_pair, 4), dtype = np.float64),
-            A_a = np.empty((n_pair, 4), dtype = np.float64),
-            B_b = np.empty((n_pair, 4), dtype = np.float64),
+            P_p = np.empty((n_pair, 4), dtype = np.float64, order = "C"),
+            A_a = np.empty((n_pair, 4), dtype = np.float64, order = "C"),
+            B_b = np.empty((n_pair, 4), dtype = np.float64, order = "C"),
             coefficient = np.empty(n_pair, dtype = np.float64),
             i_ao_start = np.empty(n_pair, dtype = np.int32),
             j_ao_start = np.empty(n_pair, dtype = np.int32),
             i_atom = np.empty(n_pair, dtype = np.int32),
             j_atom = np.empty(n_pair, dtype = np.int32),
-            ij_spherical = np.empty(n_pair, dtype = np.int32),
         )
         for i_pair in range(n_pair):
             pair = pair_list[ij_angular][i_pair]
@@ -160,8 +161,8 @@ def form_primitive_pair_data(molecule: Molecule, pair_list: PrimitivePairList) -
 
             exponent_p = exponent_a + exponent_b
             position_P = (exponent_a * position_A + exponent_b * position_B) / exponent_p
-            distance_AB = np.linalg.norm(position_A - position_B)
-            gaussian_AB = np.exp(-exponent_a * exponent_b / (exponent_a + exponent_b) * distance_AB)
+            distance_AB_2 = (position_A - position_B) @ (position_A - position_B)
+            gaussian_AB = np.exp(-exponent_a * exponent_b / exponent_p * distance_AB_2)
             total_coefficient = coefficient_A * coefficient_B * gaussian_AB
 
             pair_data.A_a[i_pair, 0:3] = position_A
@@ -175,7 +176,6 @@ def form_primitive_pair_data(molecule: Molecule, pair_list: PrimitivePairList) -
             pair_data.j_ao_start[i_pair] = shell_j.i_ao_start
             pair_data.i_atom[i_pair] = shell_i.i_atom
             pair_data.j_atom[i_pair] = shell_j.i_atom
-            pair_data.ij_spherical[i_pair] = spherical_bool_pair_to_one_int(shell_i.spherical, shell_j.spherical)
 
         pair_data_list[ij_angular] = pair_data
 

@@ -63,7 +63,6 @@ def read_basis_content(basis_file_lines: list[str]) -> BasisSet:
                 if len(angular_letter) == 1:
                     current_orbitals.append(GaussianShell(
                         angular = angular_letter_to_l_value(angular_letter),
-                        spherical = True,
                         i_ao_start = -1,
                         i_atom = -1,
                         primitive_exponents = primitive_list[:, 0],
@@ -73,7 +72,6 @@ def read_basis_content(basis_file_lines: list[str]) -> BasisSet:
                     assert angular_letter == "SP"
                     current_orbitals.append(GaussianShell(
                         angular = 0,
-                        spherical = True,
                         i_ao_start = -1,
                         i_atom = -1,
                         primitive_exponents = primitive_list[:, 0],
@@ -81,7 +79,6 @@ def read_basis_content(basis_file_lines: list[str]) -> BasisSet:
                     ))
                     current_orbitals.append(GaussianShell(
                         angular = 1,
-                        spherical = True,
                         i_ao_start = -1,
                         i_atom = -1,
                         primitive_exponents = primitive_list[:, 0],

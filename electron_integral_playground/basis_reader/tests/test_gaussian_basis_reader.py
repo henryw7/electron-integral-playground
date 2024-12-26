@@ -60,14 +60,11 @@ def test_read_gaussian_basis_file_def2tzvp():
     np.testing.assert_allclose(c_shells[7].primitive_exponents, [0.10056823671], atol = basis_read_threshold)
     np.testing.assert_allclose(c_shells[7].primitive_coefficients, [0.24955789874], atol = basis_read_threshold)
     assert c_shells[8].angular == 2
-    assert c_shells[8].spherical
     np.testing.assert_allclose(c_shells[8].primitive_exponents, [1.09700000], atol = basis_read_threshold)
     np.testing.assert_allclose(c_shells[8].primitive_coefficients, [1.0], atol = basis_read_threshold)
     assert c_shells[9].angular == 2
-    assert c_shells[9].spherical
     np.testing.assert_allclose(c_shells[9].primitive_exponents, [0.31800000], atol = basis_read_threshold)
     np.testing.assert_allclose(c_shells[9].primitive_coefficients, [1.0], atol = basis_read_threshold)
     assert c_shells[10].angular == 3
-    assert c_shells[10].spherical
     np.testing.assert_allclose(c_shells[10].primitive_exponents, [0.76100000], atol = basis_read_threshold)
     np.testing.assert_allclose(c_shells[10].primitive_coefficients, [1.0], atol = basis_read_threshold)

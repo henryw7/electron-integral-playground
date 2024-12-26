@@ -56,7 +56,7 @@ def assign_ao_index_to_shell(molecule: Molecule, ao_order: AtomicOrbitalOrder = 
     current_offset = 0
     for shell in molecule.basis_shells:
         shell.i_ao_start = current_offset
-        current_offset += n_ao_of_angular(shell.angular, shell.spherical)
+        current_offset += n_ao_of_angular(shell.angular, molecule.spherical_basis)
     molecule.n_ao = current_offset
 
 def normalize_shell(shell: GaussianShell) -> None:
@@ -91,6 +91,8 @@ def normalize_shell(shell: GaussianShell) -> None:
     If the contraction coefficients $C_m^{contract}$ does not satisfy the condition above, an prefactor of
     $$C^{normalize} = \left( \sum_{m, n}^{n_{contract}} C_m^{contract} C_n^{contract} \left(\frac{\pi}{a_m + a_n}\right)^{3/2} \frac{(2L)!}{4^L (a_m + a_n)^L L!} \right)^{-1/2}$$
     will normalize the contracted Gaussian function.
+
+    Notice that we normalize each primitive Gaussian function first, then the contracted Gaussian.
     """
 
     assert type(shell.primitive_exponents) is np.ndarray
@@ -102,6 +104,8 @@ def normalize_shell(shell: GaussianShell) -> None:
     L = shell.angular
     assert type(L) is int
     assert L >= 0
+
+    shell.primitive_coefficients = shell.primitive_coefficients * np.power(shell.primitive_exponents, L * 0.5 + 0.75)
 
     product_prefactor = np.power(np.pi, 1.5) * factorial(2 * L) / (4**L * factorial(L))
     coefficient_product = np.outer(shell.primitive_coefficients, shell.primitive_coefficients)
