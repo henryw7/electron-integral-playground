@@ -63,7 +63,7 @@ def normalize_shell(shell: GaussianShell) -> None:
     """
     Modify the primitive_coefficients field of shell, to make sure the diagonal of the molecular overlap matrix is 1.
     For a non-S shell, the primitive are normalized according to the Cartesian pure x component (px, dxx, fxxx, gxxxx, etc.).
-    This operation is idempotent.
+    This operation is NOT idempotent, don't call it more than once!
     """
     r"""
     For a contracted Gaussian function

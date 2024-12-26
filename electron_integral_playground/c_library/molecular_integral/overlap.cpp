@@ -45,7 +45,7 @@ static void mcmurchie_davidson_form_E_i0_t(const double PA, const double one_ove
 }
 
 template <int i_L, int j_L>
-static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2], double E_ij_0[i_L * j_L])
+static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2], double E_ij_0[(i_L + 1) * (j_L + 1)])
 {
 #pragma unroll
     for (int i = 0; i <= i_L; i++)
@@ -87,21 +87,21 @@ static void overlap_general_kernel(const double A_a[4],
     const double PAz = minus_b_over_p * ABz;
     const double one_over_two_p = 0.5 / p;
 
-    double E_x_ij_0[i_L * j_L];
+    double E_x_ij_0[(i_L + 1) * (j_L + 1)] {NAN};
     {
-        double E_x_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2];
+        double E_x_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2] {NAN};
         mcmurchie_davidson_form_E_i0_t<i_L + j_L>(PAx, one_over_two_p, E_x_i0_t);
         mcmurchie_davidson_E_i0_t_to_E_ij_0<i_L, j_L>(ABx, E_x_i0_t, E_x_ij_0);
     }
-    double E_y_ij_0[i_L * j_L];
+    double E_y_ij_0[(i_L + 1) * (j_L + 1)] {NAN};
     {
-        double E_y_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2];
+        double E_y_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2] {NAN};
         mcmurchie_davidson_form_E_i0_t<i_L + j_L>(PAy, one_over_two_p, E_y_i0_t);
         mcmurchie_davidson_E_i0_t_to_E_ij_0<i_L, j_L>(ABy, E_y_i0_t, E_y_ij_0);
     }
-    double E_z_ij_0[i_L * j_L];
+    double E_z_ij_0[(i_L + 1) * (j_L + 1)] {NAN};
     {
-        double E_z_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2];
+        double E_z_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2] {NAN};
         mcmurchie_davidson_form_E_i0_t<i_L + j_L>(PAz, one_over_two_p, E_z_i0_t);
         mcmurchie_davidson_E_i0_t_to_E_ij_0<i_L, j_L>(ABz, E_z_i0_t, E_z_ij_0);
     }
@@ -146,7 +146,7 @@ static void overlap_general_kernel_wrapper(const int i_pair,
 {
     constexpr int n_density_i = (i_L + 1) * (i_L + 2) / 2;
     constexpr int n_density_j = (j_L + 1) * (j_L + 2) / 2;
-    double S_cartesian[n_density_i * n_density_j];
+    double S_cartesian[n_density_i * n_density_j] {NAN};
     const double A_a[4] { pair_A_a[i_pair * 4 + 0], pair_A_a[i_pair * 4 + 1], pair_A_a[i_pair * 4 + 2], pair_A_a[i_pair * 4 + 3], };
     const double B_b[4] { pair_B_b[i_pair * 4 + 0], pair_B_b[i_pair * 4 + 1], pair_B_b[i_pair * 4 + 2], pair_B_b[i_pair * 4 + 3], };
     const double coefficient = pair_coefficient[i_pair];

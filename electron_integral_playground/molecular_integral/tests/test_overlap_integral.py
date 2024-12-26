@@ -23,7 +23,7 @@ def test_overlap_low_angular():
     #     """2
 
     #     H 0 0 0
-    #     H 1 0.1 0
+    #     F 1 0.1 0
     #     """.split("\n")
     # )
     basis_set = read_basis("sto-3g")
