@@ -9,17 +9,24 @@
 template <int L>
 static void mcmurchie_davidson_form_E_i0_t(const double PA, const double one_over_two_p, double E_i0_t[(L + 1) * (L + 2) / 2])
 {
-    E_i0_t[lower_triangular_index(0, 0)] = 1.0;
-    for (int i = 1; i <= L; i++)
+    E_i0_t[0] = 1.0;
+    if constexpr (L == 0)
+        return;
+    E_i0_t[1] = PA;
+    E_i0_t[2] = one_over_two_p;
+    if constexpr (L == 1)
+        return;
+    for (int i = 2; i <= L; i++)
     {
         E_i0_t[lower_triangular_index(i, 0)] = PA * E_i0_t[lower_triangular_index(i - 1, 0)] + E_i0_t[lower_triangular_index(i - 1, 1)];
 #pragma unroll
-        for (int t = 1; t < i; t++)
+        for (int t = 1; t < i - 1; t++)
         {
             E_i0_t[lower_triangular_index(i, t)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, t - 1)]
                                                    + PA * E_i0_t[lower_triangular_index(i - 1, t)]
                                                    + (t + 1) * E_i0_t[lower_triangular_index(i - 1, t + 1)];
         }
+        E_i0_t[lower_triangular_index(i, i - 1)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, i - 2)] + PA * E_i0_t[lower_triangular_index(i - 1, i - 1)];
         E_i0_t[lower_triangular_index(i, i)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, i - 1)];
     }
 }
