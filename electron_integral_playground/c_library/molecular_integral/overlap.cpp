@@ -2,29 +2,9 @@
 #include <math.h>
 #include <stdio.h>
 
-static const int binomial_coefficient[16 * (16 + 1) / 2] = {
-    1,
-    1,   1,
-    1,   2,   1,
-    1,   3,   3,   1,
-    1,   4,   6,   4,   1,
-    1,   5,  10,  10,   5,   1,
-    1,   6,  15,  20,  15,   6,   1,
-    1,   7,  21,  35,  35,  21,   7,   1,
-    1,   8,  28,  56,  70,  56,  28,   8,   1,
-    1,   9,  36,  84, 126, 126,  84,  36,   9,   1,
-    1,  10,  45, 120, 210, 252, 210, 120,  45,  10,   1,
-    1,  11,  55, 165, 330, 462, 462, 330, 165,  55,  11,   1,
-    1,  12,  66, 220, 495, 792, 924, 792, 495, 220,  66,  12,   1,
-    1,  13,  78, 286, 715,1287,1716,1716,1287, 715, 286,  78,  13,   1,
-    1,  14,  91, 364,1001,2002,3003,3432,3003,2002,1001, 364,  91,  14,   1,
-    1,  15, 105, 455,1365,3003,5005,6435,6435,5005,3003,1365, 455, 105,  15,   1,
-};
-
-static inline int lower_triangular_index(const int row, const int column)
-{
-    return row * (row + 1) / 2 + column;
-}
+#include "../math_constants.hpp"
+#include "../kernel_cartesian_normalization.hpp"
+#include "../cartesian_spherical_transformation.hpp"
 
 template <int L>
 static void mcmurchie_davidson_form_E_i0_t(const double PA, const double one_over_two_p, double E_i0_t[(L + 1) * (L + 2) / 2])
@@ -63,7 +43,7 @@ static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_
             double E_ij_0_temp = 0.0;
             for (int t = j; t >= 0; t--)
             {
-                E_ij_0_temp += binomial_coefficient[lower_triangular_index(j, j - t)] * AB_power_j_minus_t * E_i0_t[lower_triangular_index(i + t, 0)];
+                E_ij_0_temp += binomial_coefficients[lower_triangular_index(j, j - t)] * AB_power_j_minus_t * E_i0_t[lower_triangular_index(i + t, 0)];
                 AB_power_j_minus_t *= AB;
             }
             E_ij_0[i * (j_L + 1) + j] = E_ij_0_temp;
@@ -131,6 +111,8 @@ static void overlap_general_kernel(const double A_a[4],
             }
         }
     }
+
+    kernel_cartesian_normalize<i_L, j_L>(S_cartesian);
 }
 
 template <int i_L, int j_L>
@@ -155,13 +137,31 @@ static void overlap_general_kernel_wrapper(const int i_pair,
 
     const int i_ao_start = pair_i_ao_start[i_pair];
     const int j_ao_start = pair_j_ao_start[i_pair];
-    for (int i = 0; i < n_density_i; i++)
+    if (spherical)
     {
-        for (int j = 0; j < n_density_j; j++)
+        cartesian_to_spherical<i_L, j_L>(S_cartesian);
+        for (int i = 0; i < 2 * i_L + 1; i++)
         {
-            S_matrix[(i_ao_start + i) * n_ao + (j_ao_start + j)] += S_cartesian[i * n_density_j + j];
-            if (i_ao_start != j_ao_start)
-                S_matrix[(i_ao_start + i) + (j_ao_start + j) * n_ao] += S_cartesian[i * n_density_j + j];
+            for (int j = 0; j < 2 * j_L + 1; j++)
+            {
+                // TODO: atomic add
+                S_matrix[(i_ao_start + i) * n_ao + (j_ao_start + j)] += S_cartesian[i * n_density_j + j];
+                if (i_ao_start != j_ao_start)
+                    S_matrix[(i_ao_start + i) + (j_ao_start + j) * n_ao] += S_cartesian[i * n_density_j + j];
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < n_density_i; i++)
+        {
+            for (int j = 0; j < n_density_j; j++)
+            {
+                // TODO: atomic add
+                S_matrix[(i_ao_start + i) * n_ao + (j_ao_start + j)] += S_cartesian[i * n_density_j + j];
+                if (i_ao_start != j_ao_start)
+                    S_matrix[(i_ao_start + i) + (j_ao_start + j) * n_ao] += S_cartesian[i * n_density_j + j];
+            }
         }
     }
 }

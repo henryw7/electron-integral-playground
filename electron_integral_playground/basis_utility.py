@@ -92,7 +92,7 @@ def normalize_shell(shell: GaussianShell) -> None:
     $$C^{normalize} = \left( \sum_{m, n}^{n_{contract}} C_m^{contract} C_n^{contract} \left(\frac{\pi}{a_m + a_n}\right)^{3/2} \frac{(2L)!}{4^L (a_m + a_n)^L L!} \right)^{-1/2}$$
     will normalize the contracted Gaussian function.
 
-    Notice that we normalize each primitive Gaussian function first, then the contracted Gaussian.
+    Notice that we normalize each primitive Gaussian function first, then the contracted Gaussian. The normalization constant for each primitive Gaussian function is proportional to $a^{L/2 + 3/4}$. The other part of the normalization constant is the same for all primitive Gaussian functions in the same contraction, and will be handled in the contracted Gaussian normalization.
     """
 
     assert type(shell.primitive_exponents) is np.ndarray
