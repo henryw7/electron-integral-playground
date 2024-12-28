@@ -222,6 +222,12 @@ extern "C"
             case 204: overlap_general_caller<2, 4>(pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, S_matrix, n_ao, spherical); break;
             case 304: overlap_general_caller<3, 4>(pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, S_matrix, n_ao, spherical); break;
             case 404: overlap_general_caller<4, 4>(pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, S_matrix, n_ao, spherical); break;
+            case   5: overlap_general_caller<0, 5>(pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, S_matrix, n_ao, spherical); break;
+            case 105: overlap_general_caller<1, 5>(pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, S_matrix, n_ao, spherical); break;
+            case 205: overlap_general_caller<2, 5>(pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, S_matrix, n_ao, spherical); break;
+            case 305: overlap_general_caller<3, 5>(pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, S_matrix, n_ao, spherical); break;
+            case 405: overlap_general_caller<4, 5>(pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, S_matrix, n_ao, spherical); break;
+            case 505: overlap_general_caller<5, 5>(pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, S_matrix, n_ao, spherical); break;
             default:
                 printf("%s function does not support angular i_L = %d, j_L = %d\n", __func__ , i_L, j_L);
                 fflush(stdout);

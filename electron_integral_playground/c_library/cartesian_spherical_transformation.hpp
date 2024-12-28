@@ -127,6 +127,46 @@ public:
     }
 };
 
+template<int increment>
+class CartesianToSpherical<5, increment>
+{
+    const double C_transform[11 * 21]
+    { //              x^5                x^4y                x^4z              x^3y^2               x^3yz              x^3z^2              x^2y^3             x^2y^2z             x^2yz^2              x^2z^3                xy^4               xy^3z             xy^2z^2               xyz^3                xz^4                 y^5                y^4z              y^3z^2              y^2z^3                yz^4                 z^5
+                        0,  sqrt(175.0/128.0),                  0,                  0,                  0,                  0,   -sqrt(75.0/32.0),                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,   sqrt(63.0/128.0),                  0,                  0,                  0,                  0,                  0,
+                        0,                  0,                  0,                  0,      sqrt(5.0/4.0),                  0,                  0,                  0,                  0,                  0,                  0,     -sqrt(5.0/4.0),                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,
+                        0,  -sqrt(35.0/128.0),                  0,                  0,                  0,                  0,    -sqrt(5.0/96.0),                  0,      sqrt(3.0/2.0),                  0,                  0,                  0,                  0,                  0,                  0,   sqrt(35.0/128.0),                  0,     -sqrt(5.0/6.0),                  0,                  0,                  0,
+                        0,                  0,                  0,                  0,    -sqrt(5.0/12.0),                  0,                  0,                  0,                  0,                  0,                  0,    -sqrt(5.0/12.0),                  0,      sqrt(5.0/3.0),                  0,                  0,                  0,                  0,                  0,                  0,                  0,
+                        0,    sqrt(5.0/192.0),                  0,                  0,                  0,                  0,    sqrt(5.0/112.0),                  0,    -sqrt(9.0/28.0),                  0,                  0,                  0,                  0,                  0,                  0,    sqrt(15.0/64.0),                  0,   -sqrt(45.0/28.0),                  0,      sqrt(5.0/3.0),                  0,
+                        0,                  0,            5.0/8.0,                  0,                  0,                  0,                  0,   sqrt(15.0/112.0),                  0,   -sqrt(25.0/21.0),                  0,                  0,                  0,                  0,                  0,                  0,            5.0/8.0,                  0,   -sqrt(25.0/21.0),                  0,                1.0,
+          sqrt(15.0/64.0),                  0,                  0,    sqrt(5.0/112.0),                  0,   -sqrt(45.0/28.0),                  0,                  0,                  0,                  0,    sqrt(5.0/192.0),                  0,    -sqrt(9.0/28.0),                  0,      sqrt(5.0/3.0),                  0,                  0,                  0,                  0,                  0,                  0,
+                        0,                  0,   -sqrt(35.0/48.0),                  0,                  0,                  0,                  0,                  0,                  0,      sqrt(5.0/4.0),                  0,                  0,                  0,                  0,                  0,                  0,    sqrt(35.0/48.0),                  0,     -sqrt(5.0/4.0),                  0,                  0,
+        -sqrt(35.0/128.0),                  0,                  0,     sqrt(5.0/96.0),                  0,      sqrt(5.0/6.0),                  0,                  0,                  0,                  0,   sqrt(35.0/128.0),                  0,     -sqrt(3.0/2.0),                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,
+                        0,                  0,    sqrt(35.0/64.0),                  0,                  0,                  0,                  0,   -sqrt(27.0/16.0),                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,    sqrt(35.0/64.0),                  0,                  0,                  0,                  0,
+         sqrt(63.0/128.0),                  0,                  0,   -sqrt(75.0/32.0),                  0,                  0,                  0,                  0,                  0,                  0,  sqrt(175.0/128.0),                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,
+    };
+
+public:
+    static void apply(double* vector)
+    {
+        const double spherical[11] {
+            sqrt(175.0/128.0) * vector[1 * increment] - sqrt(75.0/32.0) * vector[6 * increment] + sqrt(63.0/128.0) * vector[15 * increment],
+            sqrt(5.0/4.0) * (vector[4 * increment] - vector[11 * increment]),
+            sqrt(35.0/128.0) * (-vector[1 * increment] + vector[15 * increment]) - sqrt(5.0/96.0) * vector[6 * increment] + sqrt(3.0/2.0) * vector[8 * increment] - sqrt(5.0/6.0) * vector[17 * increment],
+            -sqrt(5.0/12.0) * (vector[4 * increment] + vector[11 * increment]) + sqrt(5.0/3.0)*vector[13 * increment],
+            sqrt(5.0/192.0) * vector[1 * increment] + sqrt(5.0/112.0) * vector[6 * increment] - sqrt(9.0/28.0) * vector[8 * increment] + sqrt(15.0/64.0) * vector[15 * increment] - sqrt(45.0/28.0) * vector[17 * increment] + sqrt(5.0/3.0) * vector[19 * increment],
+            5.0/8.0 * (vector[2 * increment] + vector[16 * increment]) + sqrt(15.0/112.0) * vector[7 * increment] - sqrt(25.0/21.0) * (vector[9 * increment] + vector[18 * increment]) + vector[20 * increment],
+            sqrt(15.0/64.0) * vector[0 * increment] + sqrt(5.0/112.0) * vector[3 * increment] - sqrt(45.0/28.0) * vector[5 * increment] + sqrt(5.0/192.0) * vector[10 * increment] - sqrt(9.0/28.0) * vector[12 * increment] + sqrt(5.0/3.0) * vector[14 * increment],
+            sqrt(35.0/48.0) * (-vector[2 * increment] + vector[16 * increment]) + sqrt(5.0/4.0) * (vector[9 * increment] - vector[18 * increment]),
+            sqrt(35.0/128.0) * (-vector[0 * increment] + vector[10 * increment]) + sqrt(5.0/96.0) * vector[3 * increment] + sqrt(5.0/6.0) * vector[5 * increment] - sqrt(3.0/2.0) * vector[12 * increment],
+            sqrt(35.0/64.0) * (vector[2 * increment] + vector[16 * increment]) - sqrt(27.0/16.0) * vector[7 * increment],
+            sqrt(63.0/128.0) * vector[0 * increment] - sqrt(75.0/32.0) * vector[3 * increment] + sqrt(175.0/128.0) * vector[10 * increment],
+        };
+#pragma unroll
+        for (int i = 0; i < 11; i++)
+            vector[i * increment] = spherical[i];
+    }
+};
+
 template<int i_L, int j_L>
 static void cartesian_to_spherical(double matrix[(i_L + 1) * (i_L + 2) / 2 * (j_L + 1) * (j_L + 2) / 2])
 {
