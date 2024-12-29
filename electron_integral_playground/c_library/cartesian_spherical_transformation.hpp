@@ -1,6 +1,18 @@
 
 #include <math.h>
 
+/*
+    The function form of spherical Gaussian orbitals can be generated with the following generator functions:
+    $$\gamma_{l,k,m} = (-1)^k 2^{-l} \left({\begin{array}{*{20}c} l \\ k \end{array}}\right) \left({\begin{array}{*{20}c} 2l - 2k \\ l \end{array}}\right) \frac{(l - 2k)!}{(l - 2k - m)!}$$
+    $$\Pi_{l,m}(z, r) = \sum_{k = 0}^{floor((l - m) / 2)} \gamma_{l,k,m} r^{2k} z^{l -2k - m}$$
+    $$A_m(x, y) = \sum_{p = 0}^m \left({\begin{array}{*{20}c} m \\ p \end{array}}\right) x^p y^{m - p} cos\left(\frac{\pi}{2} (m - p)\right)$$
+    $$B_m(x, y) = \sum_{p = 0}^m \left({\begin{array}{*{20}c} m \\ p \end{array}}\right) x^p y^{m - p} sin\left(\frac{\pi}{2} (m - p)\right)$$
+    $$C_{l, m}(x, y, z) = \sqrt{\frac{(2 - \delta_{m, 0}) (l - m)!}{(l + m)!}} \Pi_{l,m}(z, r) A_m(x, y) \qquad m = 0,1,...,l$$
+    $$S_{l, m}(x, y, z) = \sqrt{\frac{2(l - m)!}{(l + m)!}} \Pi_{l,m}(z, r) B_m(x, y) \qquad m = 1,2,...,l$$
+    The spherical Gaussian orbitals with the same $l$ are ordered by
+    $$S_{l, l}, S_{l, l - 1}, ..., S_{l, 1}, C_{l, 0}, C_{l, 1}, ..., C_{l, l - 1}, C_{l, l}$$
+*/
+
 template<int L, int increment>
 class CartesianToSpherical
 {
@@ -77,9 +89,9 @@ public:
     {
         const double spherical_minus_3 = 1.5/sqrt(2.0) * vector[1 * increment] - 0.5*sqrt(2.5) * vector[6 * increment];
         const double spherical_minus_1 = -0.5*sqrt(0.3) * vector[1 * increment] - 0.5*sqrt(1.5) * vector[6 * increment] + 2.0*sqrt(0.3) * vector[8 * increment];
-        const double spherical_0 = -1.5/sqrt(5.0) * vector[2 * increment] - 1.5/sqrt(5.0) * vector[7 * increment] + vector[9 * increment];
+        const double spherical_0 = -1.5/sqrt(5.0) * (vector[2 * increment] + vector[7 * increment]) + vector[9 * increment];
         const double spherical_1 = -0.5*sqrt(1.5) * vector[0 * increment] - 0.5*sqrt(0.3) * vector[3 * increment] + 2.0*sqrt(0.3) * vector[5 * increment];
-        const double spherical_2 = sqrt(3.0)/2.0 * vector[2 * increment] - sqrt(3.0)/2.0 * vector[7 * increment];
+        const double spherical_2 = sqrt(3.0)/2.0 * (vector[2 * increment] - vector[7 * increment]);
         const double spherical_3 = 0.5*sqrt(2.5) * vector[0 * increment] - 1.5/sqrt(2.0) * vector[3 * increment];
         vector[1 * increment] = vector[4 * increment]; // xyz
         vector[0 * increment] = spherical_minus_3;

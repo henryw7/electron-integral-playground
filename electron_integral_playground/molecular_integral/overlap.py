@@ -13,6 +13,7 @@ def overlap(pair_data: PrimitivePairDataAngularList, molecule: Molecule) -> np.n
 
     for ij_angular, pair_data_of_angular in pair_data.items():
         n_pair = pair_data_of_angular.P_p.shape[0]
+        assert n_pair > 0
         error_code = libmolecular_integral.overlap(
             ctypes.c_int(ij_angular[0]),
             ctypes.c_int(ij_angular[1]),

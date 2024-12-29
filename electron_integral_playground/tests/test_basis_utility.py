@@ -2,88 +2,78 @@
 import pytest
 
 import numpy as np
+from copy import deepcopy
 
+from electron_integral_playground.data_structure import GaussianShell
 from electron_integral_playground.geometry_reader.xyz_reader import read_xyz_content
 from electron_integral_playground.basis_reader.gaussian_basis_reader import read_basis
 from electron_integral_playground.basis_utility import normalize_shell, attach_basis_to_molecule, assign_ao_index_to_shell, AtomicOrbitalOrder
 
-# def test_basis_normalization_multiple_primitives():
-#     shell = GaussianShell(
-#         angular = 0,
-#         spherical = True,
-#         i_ao_start = -1,
-#         i_atom = -1,
-#         primitive_exponents = np.array([0.3683820000E+02, 0.5481720000E+01, 0.1113270000E+01]),
-#         primitive_coefficients = np.array([0.6966866381E-01, 0.3813463493E+00, 0.6817026244E+00]),
-#     )
-#     normalize_shell(shell)
-#     print("S shell")
-#     print(shell)
+normalization_threshold = 1e-14
 
-#     normalize_shell(shell)
-#     print("S shell again")
-#     print(shell)
+def test_basis_normalization_multiple_primitives():
+    shell = GaussianShell(
+        angular = 0,
+        i_ao_start = -1,
+        i_atom = -1,
+        primitive_exponents = np.array([0.3683820000E+02, 0.5481720000E+01, 0.1113270000E+01]),
+        primitive_coefficients = np.array([0.6966866381E-01, 0.3813463493E+00, 0.6817026244E+00]),
+    )
 
-#     shell.angular = 1
-#     normalize_shell(shell)
-#     print("P shell")
-#     print(shell)
+    s_shell = deepcopy(shell)
+    normalize_shell(s_shell)
+    np.testing.assert_allclose(s_shell.primitive_exponents, np.array([0.3683820000E+02, 0.5481720000E+01, 0.1113270000E+01]), atol = 0)
+    np.testing.assert_allclose(s_shell.primitive_coefficients, np.array([0.7424571167056886, 0.9736824041834441, 0.5265691816179123]), atol = normalization_threshold)
 
-#     shell.angular = 2
-#     normalize_shell(shell)
-#     print("D shell")
-#     print(shell)
+    p_shell = deepcopy(shell)
+    p_shell.angular = 1
+    normalize_shell(p_shell)
+    np.testing.assert_allclose(p_shell.primitive_exponents, np.array([0.3683820000E+02, 0.5481720000E+01, 0.1113270000E+01]), atol = 0)
+    np.testing.assert_allclose(p_shell.primitive_coefficients, np.array([9.53466870700217, 4.823483291037769, 1.175548964021699]), atol = normalization_threshold)
 
-#     shell.angular = 3
-#     normalize_shell(shell)
-#     print("F shell")
-#     print(shell)
+    d_shell = deepcopy(shell)
+    d_shell.angular = 2
+    normalize_shell(d_shell)
+    np.testing.assert_allclose(d_shell.primitive_exponents, np.array([0.3683820000E+02, 0.5481720000E+01, 0.1113270000E+01]), atol = 0)
+    np.testing.assert_allclose(d_shell.primitive_coefficients, np.array([69.77322364641736, 13.616114130201483, 1.495460534593661]), atol = normalization_threshold)
 
-#     shell.angular = 3
-#     normalize_shell(shell)
-#     print("F shell again")
-#     print(shell)
+    f_shell = deepcopy(shell)
+    f_shell.angular = 3
+    normalize_shell(f_shell)
+    np.testing.assert_allclose(f_shell.primitive_exponents, np.array([0.3683820000E+02, 0.5481720000E+01, 0.1113270000E+01]), atol = 0)
+    np.testing.assert_allclose(f_shell.primitive_coefficients, np.array([391.7035485493139, 29.48703626431445, 1.4594685003804202]), atol = normalization_threshold)
 
-#     raise NotImplementedError("Reference answer not available yet")
+def test_basis_normalization_one_primitive():
+    shell = GaussianShell(
+        angular = 0,
+        i_ao_start = -1,
+        i_atom = -1,
+        primitive_exponents = np.array([0.1243280000E+00]),
+        primitive_coefficients = np.array([1.0]),
+    )
 
-# def test_basis_normalization_one_primitive():
-#     shell = GaussianShell(
-#         angular = 0,
-#         spherical = True,
-#         i_ao_start = -1,
-#         i_atom = -1,
-#         primitive_exponents = np.array([0.1243280000E+00]),
-#         primitive_coefficients = np.array([1.0]),
-#     )
-#     normalize_shell(shell)
-#     print("S shell")
-#     print(shell)
+    s_shell = deepcopy(shell)
+    normalize_shell(s_shell)
+    np.testing.assert_allclose(s_shell.primitive_exponents, np.array([0.1243280000E+00]), atol = 0)
+    np.testing.assert_allclose(s_shell.primitive_coefficients, np.array([0.1492233559500336]), atol = normalization_threshold)
 
-#     normalize_shell(shell)
-#     print("S shell again")
-#     print(shell)
+    p_shell = deepcopy(shell)
+    p_shell.angular = 1
+    normalize_shell(p_shell)
+    np.testing.assert_allclose(p_shell.primitive_exponents, np.array([0.1243280000E+00]), atol = 0)
+    np.testing.assert_allclose(p_shell.primitive_coefficients, np.array([0.1052328353933318]), atol = normalization_threshold)
 
-#     shell.angular = 1
-#     normalize_shell(shell)
-#     print("P shell")
-#     print(shell)
+    d_shell = deepcopy(shell)
+    d_shell.angular = 2
+    normalize_shell(d_shell)
+    np.testing.assert_allclose(d_shell.primitive_exponents, np.array([0.1243280000E+00]), atol = 0)
+    np.testing.assert_allclose(d_shell.primitive_coefficients, np.array([0.0428454900225391]), atol = normalization_threshold)
 
-#     shell.angular = 2
-#     normalize_shell(shell)
-#     print("D shell")
-#     print(shell)
-
-#     shell.angular = 3
-#     normalize_shell(shell)
-#     print("F shell")
-#     print(shell)
-
-#     shell.angular = 3
-#     normalize_shell(shell)
-#     print("F shell again")
-#     print(shell)
-
-#     raise NotImplementedError("Reference answer not available yet")
+    f_shell = deepcopy(shell)
+    f_shell.angular = 3
+    normalize_shell(f_shell)
+    np.testing.assert_allclose(f_shell.primitive_exponents, np.array([0.1243280000E+00]), atol = 0)
+    np.testing.assert_allclose(f_shell.primitive_coefficients, np.array([0.0135124649803557]), atol = normalization_threshold)
 
 def test_basis_assignment_low_angular():
     molecule = read_xyz_content(
