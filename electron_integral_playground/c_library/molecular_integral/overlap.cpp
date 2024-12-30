@@ -2,61 +2,10 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "../math_constants.hpp"
+#include "../mcmurchie_davidson_term.hpp"
 #include "../kernel_cartesian_normalization.hpp"
 #include "../cartesian_spherical_transformation.hpp"
-
-template <int L>
-static void mcmurchie_davidson_form_E_i0_t(const double PA, const double one_over_two_p, double E_i0_t[(L + 1) * (L + 2) / 2])
-{
-    E_i0_t[0] = 1.0;
-    if constexpr (L == 0)
-        return;
-    E_i0_t[1] = PA;
-    E_i0_t[2] = one_over_two_p;
-    if constexpr (L == 1)
-        return;
-    for (int i = 2; i <= L; i++)
-    {
-        E_i0_t[lower_triangular_index(i, 0)] = PA * E_i0_t[lower_triangular_index(i - 1, 0)] + E_i0_t[lower_triangular_index(i - 1, 1)];
-#pragma unroll
-        for (int t = 1; t < i - 1; t++)
-        {
-            E_i0_t[lower_triangular_index(i, t)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, t - 1)]
-                                                   + PA * E_i0_t[lower_triangular_index(i - 1, t)]
-                                                   + (t + 1) * E_i0_t[lower_triangular_index(i - 1, t + 1)];
-        }
-        E_i0_t[lower_triangular_index(i, i - 1)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, i - 2)] + PA * E_i0_t[lower_triangular_index(i - 1, i - 1)];
-        E_i0_t[lower_triangular_index(i, i)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, i - 1)];
-    }
-}
-
-template <int i_L, int j_L>
-static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2], double E_ij_0[(i_L + 1) * (j_L + 1)])
-{
-#pragma unroll
-    for (int i = 0; i <= i_L; i++)
-    {
-        E_ij_0[i * (j_L + 1) + 0] = E_i0_t[lower_triangular_index(i, 0)];
-    }
-
-#pragma unroll
-    for (int j = 1; j <= j_L; j++)
-    {
-#pragma unroll
-        for (int i = 0; i <= i_L; i++)
-        {
-            double AB_power_j_minus_t = 1.0;
-            double E_ij_0_temp = 0.0;
-            for (int t = j; t >= 0; t--)
-            {
-                E_ij_0_temp += binomial_coefficients[lower_triangular_index(j, j - t)] * AB_power_j_minus_t * E_i0_t[lower_triangular_index(i + t, 0)];
-                AB_power_j_minus_t *= AB;
-            }
-            E_ij_0[i * (j_L + 1) + j] = E_ij_0_temp;
-        }
-    }
-}
+#include "../utility.h"
 
 template <int i_L, int j_L>
 static void overlap_general_kernel(const double A_a[4],
@@ -151,10 +100,9 @@ static void overlap_general_kernel_wrapper(const int i_pair,
         {
             for (int j = 0; j < 2 * j_L + 1; j++)
             {
-                // TODO: atomic add
-                S_matrix[(i_ao_start + i) * n_ao + (j_ao_start + j)] += S_cartesian[i * n_density_j + j];
+                atomic_add(S_matrix + ((i_ao_start + i) * n_ao + (j_ao_start + j)), S_cartesian[i * n_density_j + j]);
                 if (i_ao_start != j_ao_start)
-                    S_matrix[(i_ao_start + i) + (j_ao_start + j) * n_ao] += S_cartesian[i * n_density_j + j];
+                    atomic_add(S_matrix + ((i_ao_start + i) + (j_ao_start + j) * n_ao), S_cartesian[i * n_density_j + j]);
             }
         }
     }
@@ -164,10 +112,9 @@ static void overlap_general_kernel_wrapper(const int i_pair,
         {
             for (int j = 0; j < n_density_j; j++)
             {
-                // TODO: atomic add
-                S_matrix[(i_ao_start + i) * n_ao + (j_ao_start + j)] += S_cartesian[i * n_density_j + j];
+                atomic_add(S_matrix + ((i_ao_start + i) * n_ao + (j_ao_start + j)), S_cartesian[i * n_density_j + j]);
                 if (i_ao_start != j_ao_start)
-                    S_matrix[(i_ao_start + i) + (j_ao_start + j) * n_ao] += S_cartesian[i * n_density_j + j];
+                    atomic_add(S_matrix + ((i_ao_start + i) + (j_ao_start + j) * n_ao), S_cartesian[i * n_density_j + j]);
             }
         }
     }
