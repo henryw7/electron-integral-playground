@@ -49,7 +49,7 @@ static void mcmurchie_davidson_form_E_i0_t(const double PA, const double one_ove
     The close form of the horizontal recurrence relation is
     $$E_t^{i,j} = \sum_{m = 0}^{j} \left({\begin{array}{*{20}c} j \\ j - m \end{array}}\right) (A_\tau - B_\tau)^{j - m} E_t^{i+m,0}$$
     Since $E_t^{i,j} = 0$ if $t > i + j$,
-    $$E_t^{i,j} = \sum_{m = \min(0, t - i)}^{j} \left({\begin{array}{*{20}c} j \\ j - m \end{array}}\right) (A_\tau - B_\tau)^{j - m} E_t^{i+m,0}$$
+    $$E_t^{i,j} = \sum_{m = \max(0, t - i)}^{j} \left({\begin{array}{*{20}c} j \\ j - m \end{array}}\right) (A_\tau - B_\tau)^{j - m} E_t^{i+m,0}$$
     
     This function only implement the special case of $t = 0$, which is required for overlap types of integrals.
 */
