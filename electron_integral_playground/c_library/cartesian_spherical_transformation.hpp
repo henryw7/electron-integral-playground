@@ -1,4 +1,8 @@
 
+#pragma once
+
+#include "angular.h"
+
 #include <math.h>
 
 /*
@@ -13,7 +17,7 @@
     $$S_{l, l}, S_{l, l - 1}, ..., S_{l, 1}, C_{l, 0}, C_{l, 1}, ..., C_{l, l - 1}, C_{l, l}$$
 */
 
-template<int L, int increment>
+template<int L, int increment> requires (L >= 0 && L <= MAX_L)
 class CartesianToSpherical
 {
 public:
@@ -27,6 +31,8 @@ public:
     static void apply(double* vector) {}
 };
 
+// Note: the correct spherical Gaussian orbital order for p orbital is y,z,x.
+//       But clearly nobody is using this order, so we do not apply this rotation as well.
 template<int increment>
 class CartesianToSpherical<1, increment>
 {
@@ -100,6 +106,9 @@ public:
         vector[4 * increment] = spherical_1;
         vector[5 * increment] = spherical_2;
         vector[6 * increment] = spherical_3;
+        vector[7 * increment] = NAN;
+        vector[8 * increment] = NAN;
+        vector[9 * increment] = NAN;
     }
 };
 
@@ -136,6 +145,9 @@ public:
 #pragma unroll
         for (int i = 0; i < 9; i++)
             vector[i * increment] = spherical[i];
+#pragma unroll
+        for (int i = 9; i < 15; i++)
+            vector[i * increment] = NAN;
     }
 };
 
@@ -176,6 +188,9 @@ public:
 #pragma unroll
         for (int i = 0; i < 11; i++)
             vector[i * increment] = spherical[i];
+#pragma unroll
+        for (int i = 11; i < 21; i++)
+            vector[i * increment] = NAN;
     }
 };
 
@@ -220,11 +235,14 @@ public:
 #pragma unroll
         for (int i = 0; i < 13; i++)
             vector[i * increment] = spherical[i];
+#pragma unroll
+        for (int i = 13; i < 28; i++)
+            vector[i * increment] = NAN;
     }
 };
 
-template<int i_L, int j_L>
-static void cartesian_to_spherical(double matrix[(i_L + 1) * (i_L + 2) / 2 * (j_L + 1) * (j_L + 2) / 2])
+template<int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_L && j_L >= 0 && j_L <= MAX_L)
+static void cartesian_to_spherical_inplace(double matrix[(i_L + 1) * (i_L + 2) / 2 * (j_L + 1) * (j_L + 2) / 2])
 {
     constexpr int n_cartesian_i = (i_L + 1) * (i_L + 2) / 2;
     constexpr int n_cartesian_j = (j_L + 1) * (j_L + 2) / 2;

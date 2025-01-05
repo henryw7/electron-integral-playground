@@ -53,7 +53,7 @@ static void mcmurchie_davidson_form_E_i0_t(const double PA, const double one_ove
     
     This function only implement the special case of $t = 0$, which is required for overlap types of integrals.
 */
-template <int i_L, int j_L>
+template <int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_L && j_L >= 0 && j_L <= MAX_L)
 static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2], double E_ij_0[(i_L + 1) * (j_L + 1)])
 {
 #pragma unroll
