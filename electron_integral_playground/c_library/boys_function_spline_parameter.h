@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "angular.h"
 
 #define BOYS_SPLINE_N_POINTS 2961

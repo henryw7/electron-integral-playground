@@ -2,6 +2,7 @@
 #pragma once
 
 #include "math_constants.hpp"
+#include "indexing.h"
 
 /*
     This function apply the vertical recurrence relation (assuming $j = 0$)
