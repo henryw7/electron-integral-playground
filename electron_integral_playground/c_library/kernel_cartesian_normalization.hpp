@@ -5,12 +5,6 @@
 
 #include "angular.h"
 
-/*
-    We've nomalized each shell according to the normalization of pure $x$ component (px, dx^2, fx^3, etc.)
-    For other components, the additional normalization of the following form will apply:
-    $$\sqrt{ \frac{i_x! i_y! i_z!}{(2i_x)! (2i_y)! (2i_z)!} \frac{(2L)!}{L!} }$$
-*/
-
 static const double kernel_cartesian_normalization_constants[MAX_L + 1][(MAX_L + 1) * (MAX_L + 2) / 2]
 {
     { 1.0, },
@@ -22,6 +16,11 @@ static const double kernel_cartesian_normalization_constants[MAX_L + 1][(MAX_L +
     { 1.0,      sqrt(11.0),      sqrt(11.0),      sqrt(33.0),      sqrt(99.0),      sqrt(33.0), sqrt(231.0/5.0),     sqrt(231.0),     sqrt(231.0), sqrt(231.0/5.0),      sqrt(33.0),     sqrt(231.0),     sqrt(385.0),     sqrt(231.0),      sqrt(33.0),      sqrt(11.0),      sqrt(99.0),     sqrt(231.0),     sqrt(231.0),      sqrt(99.0),      sqrt(11.0),             1.0,      sqrt(11.0),      sqrt(33.0), sqrt(231.0/5.0),      sqrt(33.0),      sqrt(11.0),             1.0,},
 };
 
+/*
+    We've nomalized each shell according to the normalization of pure $x$ component (px, dx^2, fx^3, etc.)
+    For other components, the additional normalization of the following form will apply:
+    $$\sqrt{ \frac{i_x! i_y! i_z!}{(2i_x)! (2i_y)! (2i_z)!} \frac{(2L)!}{L!} }$$
+*/
 template<int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_L && j_L >= 0 && j_L <= MAX_L)
 static void kernel_cartesian_normalize(double S_cartesian[(i_L + 1) * (i_L + 2) / 2 * (j_L + 1) * (j_L + 2) / 2])
 {

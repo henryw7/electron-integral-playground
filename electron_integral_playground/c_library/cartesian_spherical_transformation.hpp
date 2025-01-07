@@ -16,7 +16,6 @@
     The spherical Gaussian orbitals with the same $l$ are ordered by
     $$S_{l, l}, S_{l, l - 1}, ..., S_{l, 1}, C_{l, 0}, C_{l, 1}, ..., C_{l, l - 1}, C_{l, l}$$
 */
-
 template<int L, int increment> requires (L >= 0 && L <= MAX_L)
 class CartesianToSpherical
 {

@@ -68,6 +68,37 @@ static const double boys_taylor_prefactor[MAX_L * 4 + 2 + 1][BOYS_TAYLOR_ORDER +
     {      1.0/53.0,     -1.0/55.0,     1.0/114.0,    -1.0/354.0,    1.0/1464.0,   -1.0/7560.0,   1.0/46800.0, -1.0/337680.0, 1.0/2782080.0, },
 };
 
+/*
+    The following implementation of Boys function $F_m(x)$ guarantees that the max relative error is approximately $10^{-12}$.
+
+    The reference value is obtained according to the incomplete gamma function implementation of Boys function:
+    $$F_m(x) = \frac{1}{2} \Gamma\left(m + \frac{1}{2}\right) \frac{1}{x^{m + 1/2}} \gamma\left(m + \frac{1}{2}, x\right)$$
+    where
+    $$\Gamma(n) = \int_0^\infty dt \ t^{n-1} e^{-t}$$
+    is the Gamma function ($\Gamma\left(m + \frac{1}{2}\right) = \frac{(2m - 1)!!}{2^m} \sqrt{\pi}$), and
+    $$\gamma(n,x) = \frac{1}{\Gamma(n)} \int_0^x dt \ t^{n-1} e^{-t}$$
+    is the regularized lower incomplete gamma function. The implementation of regularized lower incomplete gamma function is obtained from scipy (\texttt{scipy.special.gammainc()}).
+
+    In our implementation, the Boys function is evaluated in the following way:
+
+    If $x = 0$, $F_m(0) = \frac{1}{2m + 1}$. We make this a special case because $x = 0$ is a frequently-encountered input.
+
+    If $x \rightarrow 0$, the Taylor expansion of $F_m(x)$ at $x = 0$ is used:
+    $$F_m(x) = \sum_{k=0}^\infty \frac{(-1)^k}{k!(2m+2k+1)} x^k$$
+    In practice, an 8-th order Taylor expansion provides $10^{-12}$ relative error for $F_{26}(x)$ at about $x \leq 0.2$.
+
+    If $x \rightarrow \infty$, the asymptotic approximation of $F_m(x)$ is used:
+    $$F_0(x) \approx \frac{1}{2} \sqrt{\frac{\pi}{x}}$$
+    $$F_m(x) \approx \frac{(2m-1)!!}{2^{m+1}} \sqrt{\frac{\pi}{x^{2m+1}}} \quad (m \geq 1)$$
+    In practice, this asymptotic approximation provides $10^{-12}$ relative error for $F_{26}(x)$ at about $x \geq 80$.
+
+    For the middle range of $F_m(x)$, the upward recursion is applied:
+    $$F_0(x) = \frac{1}{2} \sqrt{\frac{\pi}{x}}erf(\sqrt{x})$$
+    $$F_{m+1}(x) = \frac{(2m+1)F_m(x) - e^{-x}}{2x}$$
+    In practice, the upward recursion is numerically unstable for small value of $x$, and provides $10^{-12}$ relative error for $F_{26}(x)$ only at about $x \geq 15$.
+
+    For $0.2 \leq x \leq 15$, a cubic spline is used for every order ($m$) of $F_m(x)$.
+*/
 template<int L> requires (L >= 0 && L <= MAX_L * 4 + 2)
 static void boys_function_evaluate(const double x, double y[L + 1])
 {
