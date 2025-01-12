@@ -97,7 +97,7 @@ static const double boys_taylor_prefactor[MAX_L * 4 + 2 + 1][BOYS_TAYLOR_ORDER +
     $$F_{m+1}(x) = \frac{(2m+1)F_m(x) - e^{-x}}{2x}$$
     In practice, the upward recursion is numerically unstable for small value of $x$, and provides $10^{-12}$ relative error for $F_{26}(x)$ only at about $x \geq 15$.
 
-    For $0.2 \leq x \leq 15$, a cubic spline is used for every order ($m$) of $F_m(x)$.
+    For $0.2 \leq x \leq 15$, a cubic spline is used for every order ($m$) of $F_m(x)$. The interval of each spline is $5 \times 10^{-3}$ to ensure $10^{-12}$ relative error for $F_{26}(x)$.
 */
 template<int L> requires (L >= 0 && L <= MAX_L * 4 + 2)
 static void boys_function_evaluate(const double x, double y[L + 1])

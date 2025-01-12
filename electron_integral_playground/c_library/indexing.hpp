@@ -26,3 +26,17 @@ static inline int mcmurchie_davidson_E_ijt_index(const int i, const int j, const
 {
     return i * (j_L + 1) * (j_L + 2) / 2 + (i - 1) * i / 2 * (j_L + 1) + j * (j + 2 * i + 1) / 2 + t;
 }
+
+/*
+    Consistent with the following for loop:
+    int index;
+    for (int x = 0; x <= L; x++)
+        for (int y = 0; x + y <= L; y++)
+            for (int z = 0; x + y + z <= L; z++)
+                index++;
+*/
+template <int L> requires (L >= 0)
+static inline int triple_lower_triangular_index(const int x, const int y, const int z)
+{
+    return ((L + 1) * (L + 2) * (L + 3) - (L + 1 - x) * (L + 2 - x) * (L + 3 - x)) / 6 + ((L - x + 1) * (L - x + 2) - (L - x + 1 - y) * (L - x + 2 - y)) / 2 + z;
+}

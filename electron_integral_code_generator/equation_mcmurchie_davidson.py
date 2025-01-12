@@ -47,4 +47,52 @@ def get_mcmurchie_davidson_E_term(i: int, j: int, t: int, xyz: str) -> str:
     assert term is not None
 
     return simplify(term)
-    
+
+def recur_mcmurchie_davidson_R_term(tx: int, ty: int, tz: int, n: int) -> str:
+    r"""
+    Apply the McMurchie-Davidson recurrence relationship:
+    \begin{align*}
+		R_{t_x+1, t_y, t_z}^n &= t_x R_{t_x-1, t_y, t_z}^{n+1} + PQ_x R_{t_x, t_y, t_z}^{n+1} \\
+		R_{t_x, t_y+1, t_z}^n &= t_y R_{t_x, t_y-1, t_z}^{n+1} + PQ_y R_{t_x, t_y, t_z}^{n+1} \\
+		R_{t_x, t_y, t_z+1}^n &= t_z R_{t_x, t_y, t_z-1}^{n+1} + PQ_z R_{t_x, t_y, t_z}^{n+1}
+    \end{align*}
+    with the following base cases:
+    \begin{align*}
+		R_{000}^n &= (-2\zeta)^n F_n\left(\zeta |\vec{PQ}|^2\right) \\
+		R_{t_x, t_y, t_z}^n &= 0 \quad if \quad t_x < 0 \ or \ t_y < 0 \ or \ t_z < 0
+    \end{align*}
+    """
+    assert n >= 0
+    if tx < 0 or ty < 0 or tz < 0:
+        return None
+    if tx == 0 and ty == 0 and tz == 0:
+        return f"R_0_0_0_{n}"
+    if tz > 0:
+        R_t_minus_2 = recur_mcmurchie_davidson_R_term(tx, ty, tz - 2, n + 1)
+        R_t_minus_1 = recur_mcmurchie_davidson_R_term(tx, ty, tz - 1, n + 1)
+        output = ""
+        if R_t_minus_2 is not None: output += f" + {tz - 1} * ({R_t_minus_2})"
+        if R_t_minus_1 is not None: output += f" + PQz * ({R_t_minus_1})"
+        return output
+    elif ty > 0:
+        R_t_minus_2 = recur_mcmurchie_davidson_R_term(tx, ty - 2, tz, n + 1)
+        R_t_minus_1 = recur_mcmurchie_davidson_R_term(tx, ty - 1, tz, n + 1)
+        output = ""
+        if R_t_minus_2 is not None: output += f" + {ty - 1} * ({R_t_minus_2})"
+        if R_t_minus_1 is not None: output += f" + PQy * ({R_t_minus_1})"
+        return output
+    else:
+        R_t_minus_2 = recur_mcmurchie_davidson_R_term(tx - 2, ty, tz, n + 1)
+        R_t_minus_1 = recur_mcmurchie_davidson_R_term(tx - 1, ty, tz, n + 1)
+        output = ""
+        if R_t_minus_2 is not None: output += f" + {tx - 1} * ({R_t_minus_2})"
+        if R_t_minus_1 is not None: output += f" + PQx * ({R_t_minus_1})"
+        return output
+
+def get_mcmurchie_davidson_R_term(tx: int, ty: int, tz: int, n: int = 0) -> str:
+    assert tx >= 0 and ty >= 0 and tz >= 0
+    assert n >= 0
+    term = recur_mcmurchie_davidson_R_term(tx, ty, tz, n)
+    assert term is not None
+
+    return simplify(term)
