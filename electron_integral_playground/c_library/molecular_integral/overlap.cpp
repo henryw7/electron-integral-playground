@@ -5,13 +5,13 @@
 #include "../mcmurchie_davidson_term.hpp"
 #include "../kernel_cartesian_normalization.hpp"
 #include "../cartesian_spherical_transformation.hpp"
-#include "../utility.h"
+#include "../parallel_utility.h"
 
 template <int i_L, int j_L>
 static void overlap_general_kernel(const double A_a[4],
                                    const double B_b[4],
                                    const double coefficient,
-                                   double S_cartesian[(i_L + 1) * (i_L + 2) / 2 * (j_L + 1) * (j_L + 2) / 2])
+                                   double S_cartesian[lower_triangular_total<i_L> * lower_triangular_total<j_L>])
 {
     const double p = A_a[3] + B_b[3];
     const double minus_b_over_p = -B_b[3] / p;
@@ -25,19 +25,19 @@ static void overlap_general_kernel(const double A_a[4],
 
     double E_x_ij_0[(i_L + 1) * (j_L + 1)] {NAN};
     {
-        double E_x_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2] {NAN};
+        double E_x_i0_t[lower_triangular_total<i_L + j_L>] {NAN};
         mcmurchie_davidson_form_E_i0_t<i_L + j_L>(PAx, one_over_two_p, E_x_i0_t);
         mcmurchie_davidson_E_i0_t_to_E_ij_0<i_L, j_L>(ABx, E_x_i0_t, E_x_ij_0);
     }
     double E_y_ij_0[(i_L + 1) * (j_L + 1)] {NAN};
     {
-        double E_y_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2] {NAN};
+        double E_y_i0_t[lower_triangular_total<i_L + j_L>] {NAN};
         mcmurchie_davidson_form_E_i0_t<i_L + j_L>(PAy, one_over_two_p, E_y_i0_t);
         mcmurchie_davidson_E_i0_t_to_E_ij_0<i_L, j_L>(ABy, E_y_i0_t, E_y_ij_0);
     }
     double E_z_ij_0[(i_L + 1) * (j_L + 1)] {NAN};
     {
-        double E_z_i0_t[(i_L + j_L + 1) * (i_L + j_L + 2) / 2] {NAN};
+        double E_z_i0_t[lower_triangular_total<i_L + j_L>] {NAN};
         mcmurchie_davidson_form_E_i0_t<i_L + j_L>(PAz, one_over_two_p, E_z_i0_t);
         mcmurchie_davidson_E_i0_t_to_E_ij_0<i_L, j_L>(ABz, E_z_i0_t, E_z_ij_0);
     }
@@ -61,7 +61,7 @@ static void overlap_general_kernel(const double A_a[4],
                     const int j_density = (j_L - j_x) * (j_L - j_x + 1) / 2 + j_L - j_x - j_y;
 
                     const double E_ij_xyz = E_x_ij_0[i_x * (j_L + 1) + j_x] * E_y_ij_0[i_y * (j_L + 1) + j_y] * E_z_ij_0[i_z * (j_L + 1) + j_z];
-                    constexpr int n_density_j = (j_L + 1) * (j_L + 2) / 2;
+                    constexpr int n_density_j = lower_triangular_total<j_L>;
                     S_cartesian[i_density * n_density_j + j_density] = coefficient * E_ij_xyz * pow(M_PI / p, 1.5);
                 }
             }
@@ -82,8 +82,8 @@ static void overlap_general_kernel_wrapper(const int i_pair,
                                            const int n_ao,
                                            const bool spherical)
 {
-    constexpr int n_density_i = (i_L + 1) * (i_L + 2) / 2;
-    constexpr int n_density_j = (j_L + 1) * (j_L + 2) / 2;
+    constexpr int n_density_i = lower_triangular_total<i_L>;
+    constexpr int n_density_j = lower_triangular_total<j_L>;
     double S_cartesian[n_density_i * n_density_j] {NAN};
     const double A_a[4] { pair_A_a[i_pair * 4 + 0], pair_A_a[i_pair * 4 + 1], pair_A_a[i_pair * 4 + 2], pair_A_a[i_pair * 4 + 3], };
     const double B_b[4] { pair_B_b[i_pair * 4 + 0], pair_B_b[i_pair * 4 + 1], pair_B_b[i_pair * 4 + 2], pair_B_b[i_pair * 4 + 3], };
