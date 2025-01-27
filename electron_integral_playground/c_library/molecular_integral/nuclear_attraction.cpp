@@ -13,7 +13,7 @@ static void nuclear_attraction_general_kernel(const double P_p[4],
                                               const double A_a[4],
                                               const double B_b[4],
                                               const double coefficient,
-                                              const double C_q[4],
+                                              const double C[4],
                                               double V_cartesian[lower_triangular_total<i_L> * lower_triangular_total<j_L>])
 {
     const double p = P_p[3];
@@ -23,9 +23,9 @@ static void nuclear_attraction_general_kernel(const double P_p[4],
     const double PAx = P_p[0] - A_a[0];
     const double PAy = P_p[1] - A_a[1];
     const double PAz = P_p[2] - A_a[2];
-    const double PCx = P_p[0] - C_q[0];
-    const double PCy = P_p[1] - C_q[1];
-    const double PCz = P_p[2] - C_q[2];
+    const double PCx = P_p[0] - C[0];
+    const double PCy = P_p[1] - C[1];
+    const double PCz = P_p[2] - C[2];
     const double PC_2 = PCx * PCx + PCy * PCy + PCz * PCz;
     const double one_over_two_p = 0.5 / p;
 
@@ -107,7 +107,7 @@ static void nuclear_attraction_general_kernel_wrapper(const int i_pair,
                                                       const double* pair_coefficient,
                                                       const int* pair_i_ao_start,
                                                       const int* pair_j_ao_start,
-                                                      const double* charge_position_value,
+                                                      const double* charge_position,
                                                       const int n_charge,
                                                       double* V_tensor,
                                                       const int n_ao,
@@ -121,9 +121,9 @@ static void nuclear_attraction_general_kernel_wrapper(const int i_pair,
     const double B_b[4] { pair_B_b[i_pair * 4 + 0], pair_B_b[i_pair * 4 + 1], pair_B_b[i_pair * 4 + 2], pair_B_b[i_pair * 4 + 3], };
     const double coefficient = pair_coefficient[i_pair];
 
-    const double C_q[4] { charge_position_value[i_charge * 4 + 0], charge_position_value[i_charge * 4 + 1], charge_position_value[i_charge * 4 + 2], charge_position_value[i_charge * 4 + 3], };
+    const double C[3] { charge_position[i_charge * 3 + 0], charge_position[i_charge * 3 + 1], charge_position[i_charge * 3 + 2], };
 
-    nuclear_attraction_general_kernel<i_L, j_L>(P_p, A_a, B_b, coefficient, C_q, V_cartesian);
+    nuclear_attraction_general_kernel<i_L, j_L>(P_p, A_a, B_b, coefficient, C, V_cartesian);
 
     const int i_ao_start = pair_i_ao_start[i_pair];
     const int j_ao_start = pair_j_ao_start[i_pair];
@@ -162,7 +162,7 @@ static void nuclear_attraction_general_caller(const double* pair_P_p,
                                               const int* pair_i_ao_start,
                                               const int* pair_j_ao_start,
                                               const int n_pair,
-                                              const double* charge_position_value,
+                                              const double* charge_position,
                                               const int n_charge,
                                               double* V_tensor,
                                               const int n_ao,
@@ -172,7 +172,7 @@ static void nuclear_attraction_general_caller(const double* pair_P_p,
     {
         for (int i_charge = 0; i_charge < n_charge; i_charge++)
         {
-            nuclear_attraction_general_kernel_wrapper<i_L, j_L>(i_pair, i_charge, pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, charge_position_value, n_charge, V_tensor, n_ao, spherical);
+            nuclear_attraction_general_kernel_wrapper<i_L, j_L>(i_pair, i_charge, pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, charge_position, n_charge, V_tensor, n_ao, spherical);
         }
     }
 }
@@ -188,7 +188,7 @@ extern "C"
                            const int* pair_i_ao_start,
                            const int* pair_j_ao_start,
                            const int n_pair,
-                           const double* charge_position_value,
+                           const double* charge_position,
                            const int n_charge,
                            double* V_tensor,
                            const int n_ao,
@@ -197,34 +197,34 @@ extern "C"
         const int ij_L = i_L * 100 + j_L;
         switch (ij_L)
         {
-            case   0: nuclear_attraction_general_caller<0, 0>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case   1: nuclear_attraction_general_caller<0, 1>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 101: nuclear_attraction_general_caller<1, 1>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case   2: nuclear_attraction_general_caller<0, 2>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 102: nuclear_attraction_general_caller<1, 2>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 202: nuclear_attraction_general_caller<2, 2>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case   3: nuclear_attraction_general_caller<0, 3>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 103: nuclear_attraction_general_caller<1, 3>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 203: nuclear_attraction_general_caller<2, 3>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 303: nuclear_attraction_general_caller<3, 3>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case   4: nuclear_attraction_general_caller<0, 4>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 104: nuclear_attraction_general_caller<1, 4>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 204: nuclear_attraction_general_caller<2, 4>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 304: nuclear_attraction_general_caller<3, 4>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 404: nuclear_attraction_general_caller<4, 4>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case   5: nuclear_attraction_general_caller<0, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 105: nuclear_attraction_general_caller<1, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 205: nuclear_attraction_general_caller<2, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 305: nuclear_attraction_general_caller<3, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 405: nuclear_attraction_general_caller<4, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 505: nuclear_attraction_general_caller<5, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case   6: nuclear_attraction_general_caller<0, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 106: nuclear_attraction_general_caller<1, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 206: nuclear_attraction_general_caller<2, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 306: nuclear_attraction_general_caller<3, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 406: nuclear_attraction_general_caller<4, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 506: nuclear_attraction_general_caller<5, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
-            case 606: nuclear_attraction_general_caller<6, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position_value, n_charge, V_tensor, n_ao, spherical); break;
+            case   0: nuclear_attraction_general_caller<0, 0>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case   1: nuclear_attraction_general_caller<0, 1>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 101: nuclear_attraction_general_caller<1, 1>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case   2: nuclear_attraction_general_caller<0, 2>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 102: nuclear_attraction_general_caller<1, 2>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 202: nuclear_attraction_general_caller<2, 2>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case   3: nuclear_attraction_general_caller<0, 3>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 103: nuclear_attraction_general_caller<1, 3>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 203: nuclear_attraction_general_caller<2, 3>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 303: nuclear_attraction_general_caller<3, 3>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case   4: nuclear_attraction_general_caller<0, 4>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 104: nuclear_attraction_general_caller<1, 4>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 204: nuclear_attraction_general_caller<2, 4>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 304: nuclear_attraction_general_caller<3, 4>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 404: nuclear_attraction_general_caller<4, 4>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case   5: nuclear_attraction_general_caller<0, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 105: nuclear_attraction_general_caller<1, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 205: nuclear_attraction_general_caller<2, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 305: nuclear_attraction_general_caller<3, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 405: nuclear_attraction_general_caller<4, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 505: nuclear_attraction_general_caller<5, 5>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case   6: nuclear_attraction_general_caller<0, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 106: nuclear_attraction_general_caller<1, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 206: nuclear_attraction_general_caller<2, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 306: nuclear_attraction_general_caller<3, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 406: nuclear_attraction_general_caller<4, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 506: nuclear_attraction_general_caller<5, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
+            case 606: nuclear_attraction_general_caller<6, 6>(pair_P_p, pair_A_a, pair_B_b, pair_coefficient, pair_i_ao_start, pair_j_ao_start, n_pair, charge_position, n_charge, V_tensor, n_ao, spherical); break;
             default:
                 printf("%s function does not support angular i_L = %d, j_L = %d\n", __func__ , i_L, j_L);
                 fflush(stdout);

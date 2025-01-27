@@ -75,12 +75,12 @@ static void mcmurchie_davidson_E_i0_t_to_E_ij_t(const double AB, const double E_
 #pragma unroll
             for (int t = 0; t <= i + j; t++)
             {
-                double AB_power_j_minus_t = 1.0;
+                double AB_power_j_minus_m = 1.0;
                 double E_ij_t_temp = 0.0;
                 for (int m = j; m >= MAX(0, t - i); m--)
                 {
-                    E_ij_t_temp += binomial_coefficients[lower_triangular_index(j, j - m)] * AB_power_j_minus_t * E_i0_t[lower_triangular_index(i + m, 0)];
-                    AB_power_j_minus_t *= AB;
+                    E_ij_t_temp += binomial_coefficients[lower_triangular_index(j, j - m)] * AB_power_j_minus_m * E_i0_t[lower_triangular_index(i + m, t)];
+                    AB_power_j_minus_m *= AB;
                 }
                 E_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i, j, t)] = E_ij_t_temp;
             }
@@ -107,12 +107,12 @@ static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_
 #pragma unroll
         for (int i = 0; i <= i_L; i++)
         {
-            double AB_power_j_minus_t = 1.0;
+            double AB_power_j_minus_m = 1.0;
             double E_ij_0_temp = 0.0;
             for (int m = j; m >= 0; m--)
             {
-                E_ij_0_temp += binomial_coefficients[lower_triangular_index(j, j - m)] * AB_power_j_minus_t * E_i0_t[lower_triangular_index(i + m, 0)];
-                AB_power_j_minus_t *= AB;
+                E_ij_0_temp += binomial_coefficients[lower_triangular_index(j, j - m)] * AB_power_j_minus_m * E_i0_t[lower_triangular_index(i + m, 0)];
+                AB_power_j_minus_m *= AB;
             }
             E_ij_0[i * (j_L + 1) + j] = E_ij_0_temp;
         }
@@ -150,19 +150,19 @@ static void mcmurchie_davidson_R_000_m_to_R_xyz_0(const double PQx, const double
 
                 const double PQx_2 = PQx * PQx;
                 double PQx_power_2m_minus_t = (t_x % 2 == 0) ? 1.0 : PQx;
-                for (int m_x = t_x / 2; m_x <= t_x; m_x++)
+                for (int m_x = (t_x + 1) / 2; m_x <= t_x; m_x++)
                 {
                     const double constant_prefactor_x = reverse_hermite_polynomial_coefficients[lower_triangular_index(t_x, m_x)];
 
                     const double PQy_2 = PQy * PQy;
                     double PQy_power_2m_minus_t = (t_y % 2 == 0) ? 1.0 : PQy;
-                    for (int m_y = t_y / 2; m_y <= t_y; m_y++)
+                    for (int m_y = (t_y + 1) / 2; m_y <= t_y; m_y++)
                     {
                         const double constant_prefactor_y = reverse_hermite_polynomial_coefficients[lower_triangular_index(t_y, m_y)];
 
                         const double PQz_2 = PQz * PQz;
                         double PQz_power_2m_minus_t = (t_z % 2 == 0) ? 1.0 : PQz;
-                        for (int m_z = t_z / 2; m_z <= t_z; m_z++)
+                        for (int m_z = (t_z + 1) / 2; m_z <= t_z; m_z++)
                         {
                             const double constant_prefactor_z = reverse_hermite_polynomial_coefficients[lower_triangular_index(t_z, m_z)];
 
