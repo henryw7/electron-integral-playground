@@ -14,5 +14,5 @@ mol.build()
 
 S = mol.intor("int1e_ovlp")
 
-np.savetxt('reference_overlap_hof.txt', S)
+np.savetxt('reference_overlap_hof_data.txt', S)
 

@@ -35,9 +35,9 @@ mol = gto.M(
 )
 mol.build()
 
-np.set_printoptions(linewidth = np.iinfo(np.int32).max, threshold = np.iinfo(np.int32).max, precision = 16, suppress = True)
 S = mol.intor("int1e_ovlp")
 
+np.set_printoptions(linewidth = np.iinfo(np.int32).max, threshold = np.iinfo(np.int32).max, precision = 16, suppress = True)
 np.savetxt('reference_overlap_all_angular_spherical_h2_data.txt', S)
 
 # mf = scf.RHF(mol)

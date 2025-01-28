@@ -119,7 +119,7 @@ def test_overlap_hof():
     pair_data_list = form_primitive_pair_data(molecule, pair_list)
     test_S = overlap(pair_data_list, molecule)
 
-    ref_S = np.loadtxt(current_directory / 'reference_overlap_hof.txt')
+    ref_S = np.loadtxt(current_directory / 'reference_overlap_hof_data.txt')
 
     np.testing.assert_allclose(test_S, ref_S, atol = pyscf_angstrom_integral_threshold)
 
@@ -138,6 +138,6 @@ def test_overlap_hof_distorted():
     pair_data_list = form_primitive_pair_data(molecule, pair_list)
     test_S = overlap(pair_data_list, molecule)
 
-    ref_S = np.loadtxt(current_directory / 'reference_overlap_hof_distorted.txt')
+    ref_S = np.loadtxt(current_directory / 'reference_overlap_hof_distorted_data.txt')
 
     np.testing.assert_allclose(test_S, ref_S, atol = pyscf_angstrom_integral_threshold)

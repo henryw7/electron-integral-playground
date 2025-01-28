@@ -35,7 +35,6 @@ mol = gto.M(
 )
 mol.build()
 
-np.set_printoptions(linewidth = np.iinfo(np.int32).max, threshold = np.iinfo(np.int32).max, precision = 16, suppress = True)
 S = mol.intor("int1e_ovlp")
 
 for i in range(S.shape[0]):
@@ -44,6 +43,7 @@ for i in range(S.shape[0]):
         S[i, :] *= inverse_sqrt_S_diagonal
         S[:, i] *= inverse_sqrt_S_diagonal
 
+np.set_printoptions(linewidth = np.iinfo(np.int32).max, threshold = np.iinfo(np.int32).max, precision = 16, suppress = True)
 np.savetxt('reference_overlap_all_angular_cartesian_h2_data.txt', S)
 
 # mf = scf.RHF(mol)
