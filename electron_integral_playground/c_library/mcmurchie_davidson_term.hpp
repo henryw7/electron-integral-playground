@@ -62,7 +62,7 @@ static void mcmurchie_davidson_E_i0_t_to_E_ij_t(const double AB, const double E_
 #pragma unroll
         for (int t = 0; t <= i; t++)
         {
-            E_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i, 0, t)] = E_i0_t[lower_triangular_index(i, 0)];
+            E_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i, 0, t)] = E_i0_t[lower_triangular_index(i, t)];
         }
     }
 

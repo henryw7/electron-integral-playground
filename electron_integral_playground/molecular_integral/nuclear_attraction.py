@@ -13,6 +13,10 @@ def nuclear_attraction(pair_data: PrimitivePairDataAngularList, molecule: Molecu
     assert charge_position.shape[1] == 3
     n_charge = charge_position.shape[0]
     assert n_charge > 0
+    if charge_position.dtype is not np.float64:
+        charge_position = charge_position.astype(np.float64)
+    if not charge_position.flags["C_CONTIGUOUS"]:
+        charge_position = charge_position.copy(order = "C")
     V_tensor = np.zeros((n_ao, n_ao, n_charge), dtype = np.float64, order = "C")
 
     for ij_angular, pair_data_of_angular in pair_data.items():
