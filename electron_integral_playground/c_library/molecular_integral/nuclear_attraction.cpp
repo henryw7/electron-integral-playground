@@ -2,12 +2,19 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "../mcmurchie_davidson_term.hpp"
+#include "../mcmurchie_davidson_E_term.hpp"
+#include "../mcmurchie_davidson_R_term.hpp"
 #include "../boys_function.hpp"
 #include "../kernel_cartesian_normalization.hpp"
 #include "../cartesian_spherical_transformation.hpp"
 #include "../parallel_utility.h"
 
+/*
+    \begin{align*}
+    V_{\mu\nu C} &= \iiint_{\infty} d\vec{r} \ \mu(\vec{r})\nu(\vec{r}) \frac{1}{\left| \vec{r} - \vec{C} \right|} \\
+        &= C_\mu C_\nu \frac{2\pi}{p} \sum^{i_x + j_x}_{t_x = 0} E^{i_x, j_x}_{t_x, x} \sum^{i_y + j_y}_{t_y = 0} E^{i_y, j_y}_{t_y, y} \sum^{i_z + j_z}_{t_z = 0} E^{i_z, j_z}_{t_z, z} R_{t_x,t_y,t_z}^0 \left( p, \vec{P} - \vec{C} \right)
+    \end{align*}
+*/
 template <int i_L, int j_L>
 static void nuclear_attraction_general_kernel(const double P_p[4],
                                               const double A_a[4],

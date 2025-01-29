@@ -3,7 +3,6 @@
 
 #include "math_constants.hpp"
 #include "indexing.hpp"
-#include "boys_function.hpp"
 
 /*
     This function apply the vertical recurrence relation (assuming $j = 0$)
@@ -115,70 +114,6 @@ static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_
                 AB_power_j_minus_m *= AB;
             }
             E_ij_0[i * (j_L + 1) + j] = E_ij_0_temp;
-        }
-    }
-}
-
-template <int L> requires (L >= 0)
-static void mcmurchie_davidson_form_R_000_m(const double pq, const double PQ_2, double R_000_m[L + 1])
-{
-    boys_function_evaluate<L>(pq * PQ_2, R_000_m);
-    if constexpr (L == 0)
-        return;
-    const double minus_2_pq = -2.0 * pq;
-    double minus_2_pq_power_m = minus_2_pq;
-    for (int m = 1; m <= L; m++)
-    {
-        R_000_m[m] *= minus_2_pq_power_m;
-        minus_2_pq_power_m *= minus_2_pq;
-    }
-}
-
-template <int L> requires (L >= 0)
-static void mcmurchie_davidson_R_000_m_to_R_xyz_0(const double PQx, const double PQy, const double PQz, const double R_000_m[L + 1], double R_xyz_0[triple_lower_triangular_total<L>])
-{
-#pragma unroll
-    for (int t_x = 0; t_x <= L; t_x++)
-    {
-#pragma unroll
-        for (int t_y = 0; t_x + t_y <= L; t_y++)
-        {
-#pragma unroll
-            for (int t_z = 0; t_x + t_y + t_z <= L; t_z++)
-            {
-                double R_tx_ty_tz_0 = 0.0;
-
-                const double PQx_2 = PQx * PQx;
-                double PQx_power_2m_minus_t = (t_x % 2 == 0) ? 1.0 : PQx;
-                for (int m_x = (t_x + 1) / 2; m_x <= t_x; m_x++)
-                {
-                    const double constant_prefactor_x = reverse_hermite_polynomial_coefficients[lower_triangular_index(t_x, m_x)];
-
-                    const double PQy_2 = PQy * PQy;
-                    double PQy_power_2m_minus_t = (t_y % 2 == 0) ? 1.0 : PQy;
-                    for (int m_y = (t_y + 1) / 2; m_y <= t_y; m_y++)
-                    {
-                        const double constant_prefactor_y = reverse_hermite_polynomial_coefficients[lower_triangular_index(t_y, m_y)];
-
-                        const double PQz_2 = PQz * PQz;
-                        double PQz_power_2m_minus_t = (t_z % 2 == 0) ? 1.0 : PQz;
-                        for (int m_z = (t_z + 1) / 2; m_z <= t_z; m_z++)
-                        {
-                            const double constant_prefactor_z = reverse_hermite_polynomial_coefficients[lower_triangular_index(t_z, m_z)];
-
-                            R_tx_ty_tz_0 += constant_prefactor_x * constant_prefactor_y * constant_prefactor_z
-                                            * PQx_power_2m_minus_t * PQy_power_2m_minus_t * PQz_power_2m_minus_t
-                                            * R_000_m[m_x + m_y + m_z];
-
-                            PQz_power_2m_minus_t *= PQz_2;
-                        }
-                        PQy_power_2m_minus_t *= PQy_2;
-                    }
-                    PQx_power_2m_minus_t *= PQx_2;
-                }
-
-                R_xyz_0[triple_lower_triangular_index<L>(t_x, t_y, t_z)] = R_tx_ty_tz_0;
-            }
         }
     }
 }

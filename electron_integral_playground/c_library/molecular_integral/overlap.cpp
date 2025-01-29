@@ -2,11 +2,17 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "../mcmurchie_davidson_term.hpp"
+#include "../mcmurchie_davidson_E_term.hpp"
 #include "../kernel_cartesian_normalization.hpp"
 #include "../cartesian_spherical_transformation.hpp"
 #include "../parallel_utility.h"
 
+/*
+    \begin{align*}
+    S_{\mu\nu} &= \iiint_\infty d\vec{r} \ \mu(\vec{r}) \nu(\vec{r}) \\
+        &= C_\mu C_\nu E^{i_x, j_x}_{0, x} E^{i_y, j_y}_{0, y} E^{i_z, j_z}_{0, z} \left( \frac{\pi}{p} \right)^{3/2}
+    \end{align*}
+*/
 template <int i_L, int j_L>
 static void overlap_general_kernel(const double A_a[4],
                                    const double B_b[4],
