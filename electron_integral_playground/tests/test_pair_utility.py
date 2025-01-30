@@ -15,7 +15,7 @@ def test_pair_list_formation_compact():
         O 0 0 0
         H 1 0 0
         F -0.8 0.2 0
-        """.split("\n")
+        """
     )
     basis_set = read_basis("def2-svp")
     attach_basis_to_molecule(molecule, basis_set)
@@ -37,7 +37,7 @@ def test_pair_list_formation_sparse():
         O 0 0 0
         H 3 0 0
         F -0.8 2.2 0
-        """.split("\n")
+        """
     )
     basis_set = read_basis("def2-svp")
     attach_basis_to_molecule(molecule, basis_set)
@@ -59,7 +59,7 @@ def test_pair_data_formation():
         O 0 0 0
         H 1 0 0
         F -0.8 0.2 0
-        """.split("\n")
+        """
     )
     basis_set = read_basis("def2-svp")
     attach_basis_to_molecule(molecule, basis_set)

@@ -1,4 +1,6 @@
 
+from typing import Union
+
 from pathlib import Path
 import numpy as np
 
@@ -6,7 +8,10 @@ from electron_integral_playground.basis_utility import angular_letter_to_l_value
 from electron_integral_playground.data_structure import GaussianShell, BasisSet
 from electron_integral_playground.data import basis_sets_path
 
-def read_basis_content(basis_file_lines: list[str]) -> BasisSet:
+def read_basis_content(basis_file_lines: Union[str, list[str]]) -> BasisSet:
+    if type(basis_file_lines) is str:
+        basis_file_lines = basis_file_lines.split("\n")
+
     basis_set = {}
     current_atom = None
     current_orbitals = None

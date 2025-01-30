@@ -7,7 +7,7 @@ from electron_integral_playground.units import LengthUnits
 from electron_integral_playground.geometry_reader.xyz_reader import read_xyz_content
 from electron_integral_playground.basis_reader.gaussian_basis_reader import read_basis, read_basis_content
 from electron_integral_playground.basis_utility import attach_basis_to_molecule
-from electron_integral_playground.pair_utility import form_primitive_pair_list, form_primitive_pair_data
+from electron_integral_playground.pair_utility import form_pair_data
 from electron_integral_playground.molecular_integral.overlap import overlap
 
 import pathlib
@@ -23,7 +23,7 @@ def test_overlap_all_angular_spherical_h2():
 
         H 0 0 0
         H 1.0 1.3 1.55
-        """.split("\n"),
+        """,
         unit = LengthUnits.BOHR
     )
     molecule.spherical_basis = True
@@ -51,11 +51,10 @@ def test_overlap_all_angular_spherical_h2():
             2.2    1.0
             1.1    1.0
         ****
-        """.split("\n"))
+        """)
     attach_basis_to_molecule(molecule, basis_set)
-    pair_list = form_primitive_pair_list(molecule, 1e-14)
-    pair_data_list = form_primitive_pair_data(molecule, pair_list)
-    test_S = overlap(pair_data_list, molecule)
+    pair_data = form_pair_data(molecule, 1e-14)
+    test_S = overlap(pair_data, molecule)
 
     ref_S = np.loadtxt(reference_directory / 'reference_overlap_all_angular_spherical_h2_data.txt')
 
@@ -67,7 +66,7 @@ def test_overlap_all_angular_cartesian_h2():
 
         H 0 0 0
         H 1.0 1.3 1.55
-        """.split("\n"),
+        """,
         unit = LengthUnits.BOHR
     )
     molecule.spherical_basis = False
@@ -95,11 +94,10 @@ def test_overlap_all_angular_cartesian_h2():
             2.2    1.0
             1.1    1.0
         ****
-        """.split("\n"))
+        """)
     attach_basis_to_molecule(molecule, basis_set)
-    pair_list = form_primitive_pair_list(molecule, 1e-14)
-    pair_data_list = form_primitive_pair_data(molecule, pair_list)
-    test_S = overlap(pair_data_list, molecule)
+    pair_data = form_pair_data(molecule, 1e-14)
+    test_S = overlap(pair_data, molecule)
 
     ref_S = np.loadtxt(reference_directory / 'reference_overlap_all_angular_cartesian_h2_data.txt')
 
@@ -112,13 +110,12 @@ def test_overlap_hof():
         H -1 0.1 0
         O 0 0 0
         F 0.5 0.6 0.7
-        """.split("\n")
+        """
     )
     basis_set = read_basis("def2-svp")
     attach_basis_to_molecule(molecule, basis_set)
-    pair_list = form_primitive_pair_list(molecule, 1e-14)
-    pair_data_list = form_primitive_pair_data(molecule, pair_list)
-    test_S = overlap(pair_data_list, molecule)
+    pair_data = form_pair_data(molecule, 1e-14)
+    test_S = overlap(pair_data, molecule)
 
     ref_S = np.loadtxt(reference_directory / 'reference_overlap_hof_data.txt')
 
@@ -131,13 +128,12 @@ def test_overlap_hof_distorted():
         H -1 0.1 0
         O 0 0 0
         F 0.5 0.6 2.7
-        """.split("\n")
+        """
     )
     basis_set = read_basis("def2-svp")
     attach_basis_to_molecule(molecule, basis_set)
-    pair_list = form_primitive_pair_list(molecule, 1e-14)
-    pair_data_list = form_primitive_pair_data(molecule, pair_list)
-    test_S = overlap(pair_data_list, molecule)
+    pair_data = form_pair_data(molecule, 1e-14)
+    test_S = overlap(pair_data, molecule)
 
     ref_S = np.loadtxt(reference_directory / 'reference_overlap_hof_distorted_data.txt')
 

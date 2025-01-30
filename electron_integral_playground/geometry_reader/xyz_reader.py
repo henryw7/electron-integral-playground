@@ -1,10 +1,15 @@
 
+from typing import Union
+
 import numpy as np
 
 from electron_integral_playground.data_structure import Molecule
 from electron_integral_playground.units import LengthUnits, angstrom_to_bohr
 
-def read_xyz_content(xyz_file_lines: list[str], unit: LengthUnits = LengthUnits.ANGSTROM) -> Molecule:
+def read_xyz_content(xyz_file_lines: Union[str, list[str]], unit: LengthUnits = LengthUnits.ANGSTROM) -> Molecule:
+    if type(xyz_file_lines) is str:
+        xyz_file_lines = xyz_file_lines.split("\n")
+
     assert len(xyz_file_lines) >= 2
     n_atom = int(xyz_file_lines[0])
     assert n_atom > 0

@@ -181,3 +181,8 @@ def form_primitive_pair_data(molecule: Molecule, pair_list: PrimitivePairList) -
         pair_data_list[ij_angular] = pair_data
 
     return pair_data_list
+
+def form_pair_data(molecule: Molecule, schwarz_upper_bound: float) -> PrimitivePairDataAngularList:
+    pair_list = form_primitive_pair_list(molecule, 1e-14)
+    pair_data_list = form_primitive_pair_data(molecule, pair_list)
+    return pair_data_list

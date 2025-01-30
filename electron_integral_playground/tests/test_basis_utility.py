@@ -82,7 +82,7 @@ def test_basis_assignment_low_angular():
         O 0 0 0
         H 1 0 0
         F -0.8 0.2 0
-        """.split("\n")
+        """
     )
     basis_set = read_basis("3-21g")
     attach_basis_to_molecule(molecule, basis_set)
@@ -118,7 +118,7 @@ def test_basis_assignment_high_angular():
         O 0 0 0
         H 1 0 0
         H -0.8 0.2 0
-        """.split("\n")
+        """
     )
     basis_set = read_basis("def2-tzvp")
     attach_basis_to_molecule(molecule, basis_set)
