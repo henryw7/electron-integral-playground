@@ -5,8 +5,8 @@
 
 /*
     Consistent with the following for loop:
-    int index;
-    for (int row = 0; row < M; row++)
+    int index = 0;
+    for (int row = 0; row < L; row++)
         for (int column = 0; column <= row; column++)
             index++;
 */
@@ -20,7 +20,27 @@ constexpr int lower_triangular_total = (L + 1) * (L + 2) / 2;
 
 /*
     Consistent with the following for loop:
-    int index;
+    int index = 0;
+    for (int row = 0; row < L; row++)
+        for (int column = 0; column <= row; column++) {
+            if ((row + column) % 2 != 0)
+                continue;
+            index++;
+        }
+*/
+static inline int lower_triangular_even_index(const int row, const int column)
+{
+    // Attention: flooring function is taken by integer division
+    return (row / 2) * (row / 2 + 1) + (row % 2) * (row / 2 + 1) + column / 2;
+}
+
+template <int L> requires (L >= 0)
+// Attention: flooring function is taken by integer division
+constexpr int lower_triangular_even_total = ((L - 1) / 2) * ((L - 1) / 2 + 1) + ((L - 1) % 2) * ((L - 1) / 2 + 1) + (L - 1) / 2 + 1;
+
+/*
+    Consistent with the following for loop:
+    int index = 0;
     for (int i = 0; i <= i_L; i++)
         for (int j = 0; j <= j_L; j++)
             for (int t = 0; t <= i + j; t++)
@@ -37,7 +57,7 @@ constexpr int mcmurchie_davidson_E_ijt_total = (i_L + 1) * (j_L + 1) * (j_L + 2)
 
 /*
     Consistent with the following for loop:
-    int index;
+    int index = 0;
     for (int x = 0; x <= L; x++)
         for (int y = 0; x + y <= L; y++)
             for (int z = 0; x + y + z <= L; z++)

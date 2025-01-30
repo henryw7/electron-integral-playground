@@ -52,18 +52,21 @@ static void mcmurchie_davidson_R_000_m_to_R_xyz_0(const double PQx, const double
 
                 const double PQx_2 = PQx * PQx;
                 double PQx_power_2m_minus_t = (t_x % 2 == 0) ? 1.0 : PQx;
+                // Attention: ceiling function is taken by integer division
                 for (int m_x = (t_x + 1) / 2; m_x <= t_x; m_x++)
                 {
                     const double constant_prefactor_x = reverse_hermite_polynomial_coefficients[lower_triangular_index(t_x, m_x)];
 
                     const double PQy_2 = PQy * PQy;
                     double PQy_power_2m_minus_t = (t_y % 2 == 0) ? 1.0 : PQy;
+                    // Attention: ceiling function is taken by integer division
                     for (int m_y = (t_y + 1) / 2; m_y <= t_y; m_y++)
                     {
                         const double constant_prefactor_y = reverse_hermite_polynomial_coefficients[lower_triangular_index(t_y, m_y)];
 
                         const double PQz_2 = PQz * PQz;
                         double PQz_power_2m_minus_t = (t_z % 2 == 0) ? 1.0 : PQz;
+                        // Attention: ceiling function is taken by integer division
                         for (int m_z = (t_z + 1) / 2; m_z <= t_z; m_z++)
                         {
                             const double constant_prefactor_z = reverse_hermite_polynomial_coefficients[lower_triangular_index(t_z, m_z)];
