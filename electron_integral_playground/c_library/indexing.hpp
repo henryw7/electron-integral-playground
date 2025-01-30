@@ -58,7 +58,7 @@ static inline int lower_triangular_upper_anti_triangular_index(const int row, co
 
 template <int L> requires (L >= 0)
 // Attention: flooring function is taken by integer division
-constexpr int lower_triangular_upper_anti_triangular_total = 0;
+constexpr int lower_triangular_upper_anti_triangular_total = ((L + 1) / 2 + 1) * (L / 2 + 1);
 
 /*
     Consistent with the following for loop:
