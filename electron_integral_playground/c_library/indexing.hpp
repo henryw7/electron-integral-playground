@@ -6,7 +6,7 @@
 /*
     Consistent with the following for loop:
     int index = 0;
-    for (int row = 0; row < L; row++)
+    for (int row = 0; row <= L; row++)
         for (int column = 0; column <= row; column++)
             index++;
 */
@@ -21,7 +21,7 @@ constexpr int lower_triangular_total = (L + 1) * (L + 2) / 2;
 /*
     Consistent with the following for loop:
     int index = 0;
-    for (int row = 0; row < L; row++)
+    for (int row = 0; row <= L; row++)
         for (int column = 0; column <= row; column++) {
             if ((row + column) % 2 != 0)
                 continue;
@@ -36,7 +36,29 @@ static inline int lower_triangular_even_index(const int row, const int column)
 
 template <int L> requires (L >= 0)
 // Attention: flooring function is taken by integer division
-constexpr int lower_triangular_even_total = ((L - 1) / 2) * ((L - 1) / 2 + 1) + ((L - 1) % 2) * ((L - 1) / 2 + 1) + (L - 1) / 2 + 1;
+constexpr int lower_triangular_even_total = ((L + 1) / 2 + 1) * (L / 2 + 1);
+
+/*
+    Consistent with the following for loop:
+    int index = 0;
+    for (int row = 0; row <= L; row++)
+        for (int column = 0; column <= min(row, L - row); column++)
+            index++;
+*/
+template <int L> requires (L >= 0)
+static inline int lower_triangular_upper_anti_triangular_index(const int row, const int column)
+{
+    // Attention: flooring function is taken by integer division
+    const int half_L = (L + 1) / 2;
+    if (row <= half_L)
+        return row * (row + 1) / 2 + column;
+    else
+        return half_L * (half_L + 1) / 2 + ((L + 2) / 2 + L + 2 - row) * (row - half_L) / 2 + column;
+}
+
+template <int L> requires (L >= 0)
+// Attention: flooring function is taken by integer division
+constexpr int lower_triangular_upper_anti_triangular_total = 0;
 
 /*
     Consistent with the following for loop:
