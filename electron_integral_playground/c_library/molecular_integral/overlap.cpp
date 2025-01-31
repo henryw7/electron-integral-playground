@@ -31,21 +31,21 @@ static void overlap_general_kernel(const double A_a[4],
 
     double E_x_ij_0[(i_L + 1) * (j_L + 1)] {NAN};
     {
-        double E_x_i0_t[lower_triangular_total<i_L + j_L>] {NAN};
-        mcmurchie_davidson_form_E_i0_t<i_L + j_L>(PAx, one_over_two_p, E_x_i0_t);
-        mcmurchie_davidson_E_i0_t_to_E_ij_0<i_L, j_L>(ABx, E_x_i0_t, E_x_ij_0);
+        double E_x_i0_t[lower_triangular_upper_anti_triangular_total<i_L + j_L>] {NAN};
+        mcmurchie_davidson_form_E_i0_0<i_L + j_L>(PAx, one_over_two_p, E_x_i0_t);
+        mcmurchie_davidson_E_i0_0_to_E_ij_0<i_L, j_L>(ABx, E_x_i0_t, E_x_ij_0);
     }
     double E_y_ij_0[(i_L + 1) * (j_L + 1)] {NAN};
     {
-        double E_y_i0_t[lower_triangular_total<i_L + j_L>] {NAN};
-        mcmurchie_davidson_form_E_i0_t<i_L + j_L>(PAy, one_over_two_p, E_y_i0_t);
-        mcmurchie_davidson_E_i0_t_to_E_ij_0<i_L, j_L>(ABy, E_y_i0_t, E_y_ij_0);
+        double E_y_i0_t[lower_triangular_upper_anti_triangular_total<i_L + j_L>] {NAN};
+        mcmurchie_davidson_form_E_i0_0<i_L + j_L>(PAy, one_over_two_p, E_y_i0_t);
+        mcmurchie_davidson_E_i0_0_to_E_ij_0<i_L, j_L>(ABy, E_y_i0_t, E_y_ij_0);
     }
     double E_z_ij_0[(i_L + 1) * (j_L + 1)] {NAN};
     {
-        double E_z_i0_t[lower_triangular_total<i_L + j_L>] {NAN};
-        mcmurchie_davidson_form_E_i0_t<i_L + j_L>(PAz, one_over_two_p, E_z_i0_t);
-        mcmurchie_davidson_E_i0_t_to_E_ij_0<i_L, j_L>(ABz, E_z_i0_t, E_z_ij_0);
+        double E_z_i0_t[lower_triangular_upper_anti_triangular_total<i_L + j_L>] {NAN};
+        mcmurchie_davidson_form_E_i0_0<i_L + j_L>(PAz, one_over_two_p, E_z_i0_t);
+        mcmurchie_davidson_E_i0_0_to_E_ij_0<i_L, j_L>(ABz, E_z_i0_t, E_z_ij_0);
     }
 
 #pragma unroll

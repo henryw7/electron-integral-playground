@@ -44,6 +44,51 @@ static void mcmurchie_davidson_form_E_i0_t(const double PA, const double one_ove
     }
 }
 
+template <int L>
+static void mcmurchie_davidson_form_E_i0_0(const double PA, const double one_over_two_p, double E_i0_t[lower_triangular_total<L>])
+{
+    E_i0_t[0] = 1.0;
+    if constexpr (L == 0)
+        return;
+    E_i0_t[1] = PA;
+    if constexpr (L == 1)
+        return;
+    E_i0_t[2] = one_over_two_p;
+    // Attention: flooring function is taken by integer division
+    for (int i = 2; i <= L / 2; i++)
+    {
+        E_i0_t[lower_triangular_index(i, 0)] = PA * E_i0_t[lower_triangular_index(i - 1, 0)] + E_i0_t[lower_triangular_index(i - 1, 1)];
+#pragma unroll
+        for (int t = 1; t < i - 1; t++)
+        {
+            E_i0_t[lower_triangular_index(i, t)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, t - 1)]
+                                                   + PA * E_i0_t[lower_triangular_index(i - 1, t)]
+                                                   + (t + 1) * E_i0_t[lower_triangular_index(i - 1, t + 1)];
+        }
+        E_i0_t[lower_triangular_index(i, i - 1)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, i - 2)] + PA * E_i0_t[lower_triangular_index(i - 1, i - 1)];
+        E_i0_t[lower_triangular_index(i, i)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, i - 1)];
+    }
+    // Attention: flooring function is taken by integer division
+    for (int i = L / 2 + 1; i <= L; i++)
+    {
+        E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i, 0)] = PA * E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i - 1, 0)]
+                                                                        + E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i - 1, 1)];
+        const int remove_last_element = (L % 2 == 1 && i == L / 2 + 1) ? 1 : 0;
+#pragma unroll
+        for (int t = 1; t <= L - i - remove_last_element; t++)
+        {
+            E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i, t)] = one_over_two_p * E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i - 1, t - 1)]
+                                                                            + PA * E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i - 1, t)]
+                                                                            + (t + 1) * E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i - 1, t + 1)];
+        }
+        if (remove_last_element)
+        {
+            E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i, L - i)] = one_over_two_p * E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i - 1, L - i - 1)]
+                                                                                + PA * E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i - 1, L - i)];
+        }
+    }
+}
+
 /*
     This function apply the horizontal recurrence relation of the Mcmurchie-Davidson recurrence relation for Cartesian to Hermite Gaussian transformation coefficients.
     $$E_t^{i,j+1} = E_t^{i+1,j} + (A_\tau - B_\tau) E_t^{i,j}$$
@@ -92,12 +137,12 @@ static void mcmurchie_davidson_E_i0_t_to_E_ij_t(const double AB, const double E_
     only for the special case of $t = 0$, which is required for overlap types of integrals.
 */
 template <int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_L && j_L >= 0 && j_L <= MAX_L)
-static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_i0_t[lower_triangular_total<i_L + j_L>], double E_ij_0[(i_L + 1) * (j_L + 1)])
+static void mcmurchie_davidson_E_i0_0_to_E_ij_0(const double AB, const double E_i0_t[lower_triangular_total<i_L + j_L>], double E_ij_0[(i_L + 1) * (j_L + 1)])
 {
 #pragma unroll
     for (int i = 0; i <= i_L; i++)
     {
-        E_ij_0[i * (j_L + 1) + 0] = E_i0_t[lower_triangular_index(i, 0)];
+        E_ij_0[i * (j_L + 1) + 0] = E_i0_t[lower_triangular_upper_anti_triangular_index<i_L + j_L>(i, 0)];
     }
 
 #pragma unroll
@@ -110,7 +155,7 @@ static void mcmurchie_davidson_E_i0_t_to_E_ij_0(const double AB, const double E_
             double E_ij_0_temp = 0.0;
             for (int m = j; m >= 0; m--)
             {
-                E_ij_0_temp += binomial_coefficients[lower_triangular_index(j, j - m)] * AB_power_j_minus_m * E_i0_t[lower_triangular_index(i + m, 0)];
+                E_ij_0_temp += binomial_coefficients[lower_triangular_index(j, j - m)] * AB_power_j_minus_m * E_i0_t[lower_triangular_upper_anti_triangular_index<i_L + j_L>(i + m, 0)];
                 AB_power_j_minus_m *= AB;
             }
             E_ij_0[i * (j_L + 1) + j] = E_ij_0_temp;
