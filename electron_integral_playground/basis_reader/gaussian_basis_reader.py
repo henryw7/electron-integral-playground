@@ -22,7 +22,7 @@ def read_basis_content(basis_file_lines: Union[str, list[str]]) -> BasisSet:
         if "ECP" in line:
             raise NotImplementedError("ECP not supported")
         fields = line.split()
-        if not fields:
+        if len(fields) == 0:
             continue # Empty line
         if fields[0].startswith("!"):
             continue # Comment

@@ -20,7 +20,7 @@ def n_ao_of_angular(l: int, spherical: bool = True) -> int:
     else:
         return (l + 1) * (l + 2) // 2
 
-def attach_basis_to_molecule(molecule: Molecule, basis_set: BasisSet) -> int:
+def attach_basis_to_molecule(molecule: Molecule, basis_set: BasisSet, if_auxiliary_basis: bool = False) -> None:
     basis_set_actually_used = {}
     for element in molecule.elements:
         assert element in basis_set
@@ -31,33 +31,55 @@ def attach_basis_to_molecule(molecule: Molecule, basis_set: BasisSet) -> int:
         for basis in basis_set_actually_used[element]:
             normalize_shell(basis)
 
-    assert (molecule.basis_shells is None) or (not molecule.basis_shells)
-    molecule.basis_shells = []
+    if not if_auxiliary_basis:
+        assert (molecule.basis_shells is None) or (len(molecule.basis_shells) == 0)
+        molecule.basis_shells = []
+    else:
+        assert (molecule.auxiliary_basis_shells is None) or (len(molecule.auxiliary_basis_shells) == 0)
+        molecule.auxiliary_basis_shells = []
+
     for i_atom, element in enumerate(molecule.elements):
         basis_set = deepcopy(basis_set_actually_used[element])
         for basis in basis_set:
             basis.i_atom = i_atom
-        molecule.basis_shells.extend(basis_set)
 
-    return assign_ao_index_to_shell(molecule)
+        if not if_auxiliary_basis:
+            molecule.basis_shells.extend(basis_set)
+        else:
+            molecule.auxiliary_basis_shells.extend(basis_set)
+
+    assign_ao_index_to_shell(molecule)
+
+def attach_auxiliary_basis_to_molecule(molecule: Molecule, basis_set: BasisSet) -> int:
+    attach_basis_to_molecule(molecule, basis_set, True)
 
 class AtomicOrbitalOrder(Enum):
     ATOM_LEADING = 1
     ANGULAR_LEADING = 2
 
 def assign_ao_index_to_shell(molecule: Molecule, ao_order: AtomicOrbitalOrder = AtomicOrbitalOrder.ATOM_LEADING) -> None:
-    assert len(molecule.basis_shells) > 0
-    if ao_order == AtomicOrbitalOrder.ATOM_LEADING:
-        molecule.basis_shells.sort(key = lambda shell: shell.i_atom)
-    elif ao_order == AtomicOrbitalOrder.ANGULAR_LEADING:
-        molecule.basis_shells.sort(key = lambda shell: shell.angular)
-    else:
-        raise NotImplementedError(f"Unsupported atomic orbital order {ao_order}")
-    current_offset = 0
-    for shell in molecule.basis_shells:
-        shell.i_ao_start = current_offset
-        current_offset += n_ao_of_angular(shell.angular, molecule.spherical_basis)
-    molecule.n_ao = current_offset
+    def assign_ao_index_to_any_shell(basis_shells, ao_order, spherical_basis):
+        assert len(basis_shells) > 0
+        if ao_order == AtomicOrbitalOrder.ATOM_LEADING:
+            basis_shells.sort(key = lambda shell: shell.i_atom)
+        elif ao_order == AtomicOrbitalOrder.ANGULAR_LEADING:
+            basis_shells.sort(key = lambda shell: shell.angular)
+        else:
+            raise NotImplementedError(f"Unsupported atomic orbital order {ao_order}")
+        current_offset = 0
+        for shell in basis_shells:
+            shell.i_ao_start = current_offset
+            current_offset += n_ao_of_angular(shell.angular, spherical_basis)
+        return current_offset
+
+    progress = False
+    if (molecule.basis_shells is not None) and (len(molecule.basis_shells) > 0):
+        molecule.n_ao  = assign_ao_index_to_any_shell(molecule.basis_shells, ao_order, molecule.spherical_basis)
+        progress = True
+    if (molecule.auxiliary_basis_shells is not None) and (len(molecule.auxiliary_basis_shells) > 0):
+        molecule.n_aux = assign_ao_index_to_any_shell(molecule.auxiliary_basis_shells, ao_order, molecule.spherical_basis)
+        progress = True
+    assert progress
 
 def normalize_shell(shell: GaussianShell) -> None:
     """

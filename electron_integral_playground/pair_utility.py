@@ -186,3 +186,44 @@ def form_pair_data(molecule: Molecule, schwarz_upper_bound: float) -> PrimitiveP
     pair_list = form_primitive_pair_list(molecule, 1e-14)
     pair_data_list = form_primitive_pair_data(molecule, pair_list)
     return pair_data_list
+
+def form_primitive_auxiliary_pair_data(molecule: Molecule) -> PrimitivePairDataAngularList:
+    assert molecule.auxiliary_basis_shells is not None and len(molecule.auxiliary_basis_shells) > 0
+    assert molecule.n_aux > 0
+
+    angulars = set([shell.angular for shell in molecule.auxiliary_basis_shells])
+    pair_data_list = {}
+    for i_angular in angulars:
+        auxiliary_shells_same_angular = [shell for shell in molecule.auxiliary_basis_shells if shell.angular == i_angular]
+        n_primitive = sum([len(shell.primitive_exponents) for shell in auxiliary_shells_same_angular])
+        pair_data = PrimitivePairData(
+            P_p = None,
+            A_a = np.empty((n_primitive, 4), dtype = np.float64, order = "C"),
+            B_b = None,
+            coefficient = np.empty(n_primitive, dtype = np.float64),
+            i_ao_start = np.empty(n_primitive, dtype = np.int32),
+            j_ao_start = None,
+            i_atom = np.empty(n_primitive, dtype = np.int32),
+            j_atom = None,
+        )
+        i_primitive = 0
+        for shell_aux in auxiliary_shells_same_angular:
+            position_C = molecule.geometry[shell_aux.i_atom, :]
+            for aux_primitive in range(len(shell_aux.primitive_exponents)):
+                exponent_c = shell_aux.primitive_exponents[aux_primitive]
+                coefficient_C = shell_aux.primitive_coefficients[aux_primitive]
+
+                pair_data.A_a[i_primitive, 0:3] = position_C
+                pair_data.A_a[i_primitive, 3]   = exponent_c
+                pair_data.coefficient[i_primitive] = coefficient_C
+                pair_data.i_ao_start[i_primitive] = shell_aux.i_ao_start
+                pair_data.i_atom[i_primitive] = shell_aux.i_atom
+
+                i_primitive += 1
+        pair_data_list[i_angular] = pair_data
+    assert i_primitive == n_primitive
+
+    return pair_data_list
+
+def form_auxiliary_pair_data(molecule: Molecule) -> PrimitivePairDataAngularList:
+    return form_primitive_auxiliary_pair_data(molecule)

@@ -6,7 +6,7 @@ import numpy as np
 from electron_integral_playground.geometry_reader.xyz_reader import read_xyz_content
 from electron_integral_playground.basis_reader.gaussian_basis_reader import read_basis
 from electron_integral_playground.basis_utility import attach_basis_to_molecule
-from electron_integral_playground.pair_utility import form_primitive_pair_list, form_primitive_pair_data
+from electron_integral_playground.pair_utility import form_primitive_pair_list, form_primitive_pair_data, form_primitive_auxiliary_pair_data
 
 def test_pair_list_formation_compact():
     molecule = read_xyz_content(
@@ -21,7 +21,7 @@ def test_pair_list_formation_compact():
     attach_basis_to_molecule(molecule, basis_set)
     test_pair_list = form_primitive_pair_list(molecule, 1e-14)
 
-    ref_n_pair = { (0,0) : 171, (0,1) : 158, (0,2): 36, (1,1) : 51, (1,2) : 18, (2,2) : 3}
+    ref_n_pair = { (0,0) : 171, (0,1) : 158, (0,2): 36, (1,1) : 51, (1,2) : 18, (2,2) : 3, }
 
     assert len(test_pair_list) == len(ref_n_pair)
     for ij_angular in test_pair_list:
@@ -43,7 +43,7 @@ def test_pair_list_formation_sparse():
     attach_basis_to_molecule(molecule, basis_set)
     test_pair_list = form_primitive_pair_list(molecule, 1e-14)
 
-    ref_n_pair = { (0,0) : 144, (0,1) : 142, (0,2): 34, (1,1) : 47, (1,2) : 18, (2,2) : 3}
+    ref_n_pair = { (0,0) : 144, (0,1) : 142, (0,2): 34, (1,1) : 47, (1,2) : 18, (2,2) : 3, }
 
     assert len(test_pair_list) == len(ref_n_pair)
     for ij_angular in test_pair_list:
@@ -66,7 +66,7 @@ def test_pair_data_formation():
     pair_list = form_primitive_pair_list(molecule, 1e-14)
     test_pair_data_list = form_primitive_pair_data(molecule, pair_list)
 
-    ref_n_pair = { (0,0) : 171, (0,1) : 158, (0,2): 36, (1,1) : 51, (1,2) : 18, (2,2) : 3}
+    ref_n_pair = { (0,0) : 171, (0,1) : 158, (0,2): 36, (1,1) : 51, (1,2) : 18, (2,2) : 3, }
 
     assert len(test_pair_data_list) == len(ref_n_pair)
     for ij_angular in test_pair_data_list:
@@ -90,3 +90,35 @@ def test_pair_data_formation():
         assert any(test_pair_data_list[ij_angular].j_ao_start >= 0)
         assert any(test_pair_data_list[ij_angular].i_atom >= 0)
         assert any(test_pair_data_list[ij_angular].j_atom >= 0)
+
+def test_auxiliary_data_formation():
+    molecule = read_xyz_content(
+        """3
+
+        O 0 0 0
+        H 1 0 0
+        F -0.8 0.2 0
+        """
+    )
+    basis_set = read_basis("def2-svp-rifit")
+    attach_basis_to_molecule(molecule, basis_set, if_auxiliary_basis = True)
+    test_pair_data_list = form_primitive_auxiliary_pair_data(molecule)
+
+    ref_n_primitive = { 0: 20, 1: 15, 2: 12, 3: 6, }
+
+    assert len(test_pair_data_list) == len(ref_n_primitive)
+    for i_angular in test_pair_data_list:
+        assert test_pair_data_list[i_angular].A_a.shape == (ref_n_primitive[i_angular], 4)
+        assert test_pair_data_list[i_angular].coefficient.shape == (ref_n_primitive[i_angular], )
+        assert test_pair_data_list[i_angular].i_ao_start.shape == (ref_n_primitive[i_angular], )
+        assert test_pair_data_list[i_angular].i_atom.shape == (ref_n_primitive[i_angular], )
+        assert test_pair_data_list[i_angular].A_a.dtype == np.float64
+        assert test_pair_data_list[i_angular].coefficient.dtype == np.float64
+        assert test_pair_data_list[i_angular].i_ao_start.dtype == np.int32
+        assert test_pair_data_list[i_angular].i_atom.dtype == np.int32
+        assert any(test_pair_data_list[i_angular].i_ao_start >= 0)
+        assert any(test_pair_data_list[i_angular].i_atom >= 0)
+        assert test_pair_data_list[i_angular].P_p is None
+        assert test_pair_data_list[i_angular].B_b is None
+        assert test_pair_data_list[i_angular].j_ao_start is None
+        assert test_pair_data_list[i_angular].j_atom is None

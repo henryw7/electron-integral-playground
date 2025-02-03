@@ -19,6 +19,8 @@ class Molecule:
     geometry: np.ndarray # Bohr
     basis_shells: list[GaussianShell]
     n_ao: int
+    auxiliary_basis_shells: list[GaussianShell]
+    n_aux: int
     spherical_basis: bool
 
 @dataclass

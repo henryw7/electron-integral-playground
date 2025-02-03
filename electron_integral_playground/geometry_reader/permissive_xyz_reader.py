@@ -34,6 +34,8 @@ def read_xyz_content(xyz_lines: Union[str, list[str]], unit: LengthUnits = Lengt
         elements = atom_types,
         geometry = atom_coordinates,
         basis_shells = None,
-        n_ao = -1,
+        n_ao = 0,
+        auxiliary_basis_shells = None,
+        n_aux = 0,
         spherical_basis = True,
     )

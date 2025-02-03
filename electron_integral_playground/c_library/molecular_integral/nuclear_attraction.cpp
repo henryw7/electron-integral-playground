@@ -4,7 +4,6 @@
 
 #include "../mcmurchie_davidson_E_term.hpp"
 #include "../mcmurchie_davidson_R_term.hpp"
-#include "../boys_function.hpp"
 #include "../kernel_cartesian_normalization.hpp"
 #include "../cartesian_spherical_transformation.hpp"
 #include "../parallel_utility.h"
@@ -87,7 +86,7 @@ static void nuclear_attraction_general_kernel(const double P_p[4],
                         {
                             for (int t_z = 0; t_z <= i_z + j_z; t_z++)
                             {
-                                V_ij_xyz += E_x_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i_x, j_x, t_x)]
+                                V_ij_xyz +=   E_x_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i_x, j_x, t_x)]
                                             * E_y_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i_y, j_y, t_y)]
                                             * E_z_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i_z, j_z, t_z)]
                                             * R_xyz_0[triple_lower_triangular_index<i_L + j_L>(t_x, t_y, t_z)];
