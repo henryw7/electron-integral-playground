@@ -17,7 +17,7 @@ template <int i_L, int j_L>
 static void overlap_general_kernel(const double A_a[4],
                                    const double B_b[4],
                                    const double coefficient,
-                                   double S_cartesian[lower_triangular_total<i_L> * lower_triangular_total<j_L>])
+                                   double S_cartesian[cartesian_orbital_total<i_L> * cartesian_orbital_total<j_L>])
 {
     const double p = A_a[3] + B_b[3];
     const double minus_b_over_p = -B_b[3] / p;
@@ -55,7 +55,7 @@ static void overlap_general_kernel(const double A_a[4],
         for (int i_y = i_L - i_x; i_y >= 0; i_y--)
         {
             const int i_z = i_L - i_x - i_y;
-            const int i_density = (i_L - i_x) * (i_L - i_x + 1) / 2 + i_L - i_x - i_y;
+            const int i_density = cartesian_orbital_index<i_L>(i_x, i_y);
 
 #pragma unroll
             for (int j_x = j_L; j_x >= 0; j_x--)
@@ -64,10 +64,10 @@ static void overlap_general_kernel(const double A_a[4],
                 for (int j_y = j_L - j_x; j_y >= 0; j_y--)
                 {
                     const int j_z = j_L - j_x - j_y;
-                    const int j_density = (j_L - j_x) * (j_L - j_x + 1) / 2 + j_L - j_x - j_y;
+                    const int j_density = cartesian_orbital_index<j_L>(j_x, j_y);
 
                     const double E_ij_xyz = E_x_ij_0[i_x * (j_L + 1) + j_x] * E_y_ij_0[i_y * (j_L + 1) + j_y] * E_z_ij_0[i_z * (j_L + 1) + j_z];
-                    constexpr int n_density_j = lower_triangular_total<j_L>;
+                    constexpr int n_density_j = cartesian_orbital_total<j_L>;
                     S_cartesian[i_density * n_density_j + j_density] = coefficient * E_ij_xyz * pow(M_PI / p, 1.5);
                 }
             }
@@ -88,8 +88,8 @@ static void overlap_general_kernel_wrapper(const int i_pair,
                                            const int n_ao,
                                            const bool spherical)
 {
-    constexpr int n_density_i = lower_triangular_total<i_L>;
-    constexpr int n_density_j = lower_triangular_total<j_L>;
+    constexpr int n_density_i = cartesian_orbital_total<i_L>;
+    constexpr int n_density_j = cartesian_orbital_total<j_L>;
     double S_cartesian[n_density_i * n_density_j] {NAN};
     const double A_a[4] { pair_A_a[i_pair * 4 + 0], pair_A_a[i_pair * 4 + 1], pair_A_a[i_pair * 4 + 2], pair_A_a[i_pair * 4 + 3], };
     const double B_b[4] { pair_B_b[i_pair * 4 + 0], pair_B_b[i_pair * 4 + 1], pair_B_b[i_pair * 4 + 2], pair_B_b[i_pair * 4 + 3], };

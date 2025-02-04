@@ -22,7 +22,8 @@ constexpr int lower_triangular_total = (L + 1) * (L + 2) / 2;
     Consistent with the following for loop:
     int index = 0;
     for (int row = 0; row <= L; row++)
-        for (int column = 0; column <= row; column++) {
+        for (int column = 0; column <= row; column++)
+        {
             if ((row + column) % 2 != 0)
                 continue;
             index++;
@@ -93,3 +94,22 @@ static inline int triple_lower_triangular_index(const int x, const int y, const 
 
 template <int L> requires (L >= 0)
 constexpr int triple_lower_triangular_total = (L + 1) * (L + 2) * (L + 3) / 6;
+
+/*
+    Consistent with the following for loop:
+    int index = 0;
+    for (int x = L; x >= 0; x--)
+        for (int y = L - x; y >= 0; y--)
+        {
+            const int z = L - x - y;
+            index++;
+        }
+*/
+template <int L> requires (L >= 0)
+static inline int cartesian_orbital_index(const int x, const int y)
+{
+    return (L - x) * (L - x + 1) / 2 + L - x - y;
+}
+
+template <int L> requires (L >= 0)
+constexpr int cartesian_orbital_total = lower_triangular_total<L>;

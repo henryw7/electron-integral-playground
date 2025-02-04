@@ -19,7 +19,7 @@ template <int i_L, int j_L>
 static void two_center_general_kernel(const double A_a[4],
                                       const double B_b[4],
                                       const double coefficient,
-                                      double J2c_cartesian[lower_triangular_total<i_L> * lower_triangular_total<j_L>])
+                                      double J2c_cartesian[cartesian_orbital_total<i_L> * cartesian_orbital_total<j_L>])
 {
     const double PQx = A_a[0] - B_b[0];
     const double PQy = A_a[1] - B_b[1];
@@ -50,7 +50,7 @@ static void two_center_general_kernel(const double A_a[4],
         for (int i_y = i_L - i_x; i_y >= 0; i_y--)
         {
             const int i_z = i_L - i_x - i_y;
-            const int i_density = (i_L - i_x) * (i_L - i_x + 1) / 2 + i_L - i_x - i_y;
+            const int i_density = cartesian_orbital_index<i_L>(i_x, i_y);
 
 #pragma unroll
             for (int j_x = j_L; j_x >= 0; j_x--)
@@ -59,7 +59,7 @@ static void two_center_general_kernel(const double A_a[4],
                 for (int j_y = j_L - j_x; j_y >= 0; j_y--)
                 {
                     const int j_z = j_L - j_x - j_y;
-                    const int j_density = (j_L - j_x) * (j_L - j_x + 1) / 2 + j_L - j_x - j_y;
+                    const int j_density = cartesian_orbital_index<j_L>(j_x, j_y);
 
                     double J2c_ij_xyz = 0.0;
                     for (int t_x = i_x % 2; t_x <= i_x; t_x += 2)
@@ -89,7 +89,7 @@ static void two_center_general_kernel(const double A_a[4],
                         }
                     }
                     J2c_ij_xyz *= 2.0 * pow(M_PI, 2.5) / (p * q * sqrt(p + q)) * coefficient;
-                    constexpr int n_density_j = lower_triangular_total<j_L>;
+                    constexpr int n_density_j = cartesian_orbital_total<j_L>;
                     J2c_cartesian[i_density * n_density_j + j_density] = J2c_ij_xyz;
                 }
             }
@@ -117,8 +117,8 @@ static void two_center_general_kernel_wrapper(const int i_aux,
     if (i_L == j_L && i_aux_start > j_aux_start)
         return;
 
-    constexpr int n_density_i = lower_triangular_total<i_L>;
-    constexpr int n_density_j = lower_triangular_total<j_L>;
+    constexpr int n_density_i = cartesian_orbital_total<i_L>;
+    constexpr int n_density_j = cartesian_orbital_total<j_L>;
     double J2c_cartesian[n_density_i * n_density_j] {NAN};
     const double A_a[4] { aux_A_a[i_aux * 4 + 0], aux_A_a[i_aux * 4 + 1], aux_A_a[i_aux * 4 + 2], aux_A_a[i_aux * 4 + 3], };
     const double B_b[4] { aux_B_b[j_aux * 4 + 0], aux_B_b[j_aux * 4 + 1], aux_B_b[j_aux * 4 + 2], aux_B_b[j_aux * 4 + 3], };

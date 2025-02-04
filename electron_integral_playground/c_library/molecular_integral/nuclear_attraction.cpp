@@ -20,7 +20,7 @@ static void nuclear_attraction_general_kernel(const double P_p[4],
                                               const double B_b[4],
                                               const double coefficient,
                                               const double C[4],
-                                              double V_cartesian[lower_triangular_total<i_L> * lower_triangular_total<j_L>])
+                                              double V_cartesian[cartesian_orbital_total<i_L> * cartesian_orbital_total<j_L>])
 {
     const double p = P_p[3];
     const double ABx = A_a[0] - B_b[0];
@@ -68,7 +68,7 @@ static void nuclear_attraction_general_kernel(const double P_p[4],
         for (int i_y = i_L - i_x; i_y >= 0; i_y--)
         {
             const int i_z = i_L - i_x - i_y;
-            const int i_density = (i_L - i_x) * (i_L - i_x + 1) / 2 + i_L - i_x - i_y;
+            const int i_density = cartesian_orbital_index<i_L>(i_x, i_y);
 
 #pragma unroll
             for (int j_x = j_L; j_x >= 0; j_x--)
@@ -77,7 +77,7 @@ static void nuclear_attraction_general_kernel(const double P_p[4],
                 for (int j_y = j_L - j_x; j_y >= 0; j_y--)
                 {
                     const int j_z = j_L - j_x - j_y;
-                    const int j_density = (j_L - j_x) * (j_L - j_x + 1) / 2 + j_L - j_x - j_y;
+                    const int j_density = cartesian_orbital_index<j_L>(j_x, j_y);
 
                     double V_ij_xyz = 0.0;
                     for (int t_x = 0; t_x <= i_x + j_x; t_x++)
@@ -94,7 +94,7 @@ static void nuclear_attraction_general_kernel(const double P_p[4],
                         }
                     }
                     V_ij_xyz *= 2.0 * M_PI / p * coefficient;
-                    constexpr int n_density_j = lower_triangular_total<j_L>;
+                    constexpr int n_density_j = cartesian_orbital_total<j_L>;
                     V_cartesian[i_density * n_density_j + j_density] = V_ij_xyz;
                 }
             }
@@ -119,8 +119,8 @@ static void nuclear_attraction_general_kernel_wrapper(const int i_pair,
                                                       const int n_ao,
                                                       const bool spherical)
 {
-    constexpr int n_density_i = lower_triangular_total<i_L>;
-    constexpr int n_density_j = lower_triangular_total<j_L>;
+    constexpr int n_density_i = cartesian_orbital_total<i_L>;
+    constexpr int n_density_j = cartesian_orbital_total<j_L>;
     double V_cartesian[n_density_i * n_density_j] {NAN};
     const double P_p[4] { pair_P_p[i_pair * 4 + 0], pair_P_p[i_pair * 4 + 1], pair_P_p[i_pair * 4 + 2], pair_P_p[i_pair * 4 + 3], };
     const double A_a[4] { pair_A_a[i_pair * 4 + 0], pair_A_a[i_pair * 4 + 1], pair_A_a[i_pair * 4 + 2], pair_A_a[i_pair * 4 + 3], };
