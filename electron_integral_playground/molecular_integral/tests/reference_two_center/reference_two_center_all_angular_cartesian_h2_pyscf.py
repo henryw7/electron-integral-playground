@@ -29,6 +29,15 @@ mol.basis = """
     H I
         2.2    1.0
         1.1    1.0
+    H K
+        1.9    1.0
+        0.9    1.0
+    H L
+        1.8    1.0
+        0.8    1.0
+    H M
+        1.7    1.0
+        0.7    1.0
 """
 mol.unit = 'bohr'
 mol.cart = True

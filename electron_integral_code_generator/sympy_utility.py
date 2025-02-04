@@ -61,3 +61,14 @@ def simplify(term: str, if_remove_power: bool = True) -> str:
 
 def remove_whitespace(line: str) -> str:
     return "".join(line.split())
+
+def sympy_number_to_cpp_float(number: sympy.Expr) -> str:
+    assert len(number.free_symbols) == 0
+    # if number.is_integer:
+    #     return str(number)
+    if number == 0:
+        return "0"
+    number = str(number)
+    assert "." not in number
+    number = re.sub(r"(\d+)", r"\1.0", number)
+    return number

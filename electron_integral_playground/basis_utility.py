@@ -7,7 +7,8 @@ from copy import deepcopy
 
 from electron_integral_playground.data_structure import GaussianShell, Molecule, BasisSet
 
-angular_letter_to_l_value_map = { "S":0, "P":1, "D":2, "F":3, "G":4, "H":5, "I":6 }
+# This is called "spectroscopic notation" on wikipedia
+angular_letter_to_l_value_map = { "S":0, "P":1, "D":2, "F":3, "G":4, "H":5, "I":6, "K":7, "L":8, "M":9, }
 def angular_letter_to_l_value(letter: str) -> int:
     assert len(letter) == 1
     letter = letter.upper()

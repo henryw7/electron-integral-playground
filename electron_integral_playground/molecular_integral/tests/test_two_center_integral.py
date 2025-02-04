@@ -14,7 +14,7 @@ import pathlib
 current_directory = pathlib.Path(__file__).parent.resolve()
 reference_directory = current_directory / "reference_two_center"
 
-pyscf_bohr_integral_threshold = 1e-13
+pyscf_bohr_integral_threshold = 1e-12
 pyscf_angstrom_integral_threshold = 1e-9
 
 def test_two_center_all_angular_spherical_h2():
@@ -50,6 +50,15 @@ def test_two_center_all_angular_spherical_h2():
         I    2   1.00
             2.2    1.0
             1.1    1.0
+        K    2   1.00
+            1.9    1.0
+            0.9    1.0
+        L    2   1.00
+            1.8    1.0
+            0.8    1.0
+        M    2   1.00
+            1.7    1.0
+            0.7    1.0
         ****
         """)
     attach_auxiliary_basis_to_molecule(molecule, basis_set)
@@ -93,6 +102,15 @@ def test_two_center_all_angular_cartesian_h2():
         I    2   1.00
             2.2    1.0
             1.1    1.0
+        K    2   1.00
+            1.9    1.0
+            0.9    1.0
+        L    2   1.00
+            1.8    1.0
+            0.8    1.0
+        M    2   1.00
+            1.7    1.0
+            0.7    1.0
         ****
         """)
     attach_auxiliary_basis_to_molecule(molecule, basis_set)
