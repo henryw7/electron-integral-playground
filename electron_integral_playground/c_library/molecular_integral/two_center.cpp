@@ -31,10 +31,10 @@ static void two_center_general_kernel(const double A_a[4],
     const double one_over_two_q = 0.5 / q;
     const double pq_over_p_plus_q = p * q / (p + q);
 
-    double E_i0_t[lower_triangular_even_total<i_L>] {NAN};
-    mcmurchie_davidson_form_E_i0_t_0AB<i_L>(one_over_two_p, E_i0_t);
-    double E_k0_s[lower_triangular_even_total<j_L>] {NAN};
-    mcmurchie_davidson_form_E_i0_t_0AB<j_L>(one_over_two_q, E_k0_s);
+    // double E_i0_t[lower_triangular_even_total<i_L>] {NAN};
+    // mcmurchie_davidson_form_E_i0_t_0AB<i_L>(one_over_two_p, E_i0_t);
+    // double E_k0_s[lower_triangular_even_total<j_L>] {NAN};
+    // mcmurchie_davidson_form_E_i0_t_0AB<j_L>(one_over_two_q, E_k0_s);
 
     double R_xyz_0[triple_lower_triangular_total<i_L + j_L>] {NAN};
     {
@@ -75,12 +75,12 @@ static void two_center_general_kernel(const double A_a[4],
                                         for (int s_z = j_z % 2; s_z <= j_z; s_z += 2)
                                         {
                                             J2c_ij_xyz += ((s_x + s_y + s_z) % 2 == 0 ? 1 : -1)
-                                                          * E_i0_t[lower_triangular_even_index(i_x, t_x)]
-                                                          * E_i0_t[lower_triangular_even_index(i_y, t_y)]
-                                                          * E_i0_t[lower_triangular_even_index(i_z, t_z)]
-                                                          * E_k0_s[lower_triangular_even_index(j_x, s_x)]
-                                                          * E_k0_s[lower_triangular_even_index(j_y, s_y)]
-                                                          * E_k0_s[lower_triangular_even_index(j_z, s_z)]
+                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_p, i_x, t_x)
+                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_p, i_y, t_y)
+                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_p, i_z, t_z)
+                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, j_x, s_x)
+                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, j_y, s_y)
+                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, j_z, s_z)
                                                           * R_xyz_0[triple_lower_triangular_index<i_L + j_L>(t_x + s_x, t_y + s_y, t_z + s_z)];
                                         }
                                     }

@@ -130,6 +130,32 @@ static void mcmurchie_davidson_form_E_i0_t_0AB(const double one_over_two_p, doub
 }
 
 /*
+    This function computes the Cartesian to Hermite Gaussian transformation coefficients
+    for one primitive basis function instead of a pair of primitive basis functions, which is required for integrals involving auxiliary basis functions.
+
+    In this case, $b = 0$, $\vec{P} = \vec{A}$, and the close form solution is
+    $$E_t^{i,0} = \frac{i!}{\left(\frac{i-t}{2}\right)! t! 2^{(i-t)/2}} \left(\frac{1}{2p}\right)^{i - \frac{i-t}{2}}$$
+    if $i + t$ is even, otherwise $E_t^{i, 0} = $.
+*/
+static double mcmurchie_davidson_compute_E_i0_t_0AB(const double one_over_two_p, const int i, const int t)
+{
+    if (i < 0 || t < 0 || t > i)
+        return NAN;
+    if ((i + t) % 2 == 1)
+        return NAN;
+    if (i == 0)
+        return 1;
+    if (i == 1)
+        return one_over_two_p;
+    const int half_i_minus_t = (i - t) / 2;
+    const double prefactor = reverse_hermite_polynomial_coefficients[lower_triangular_index(i, i - half_i_minus_t)];
+    double one_over_two_p_power_i = 1;
+    for (int i_power = 0; i_power < i - half_i_minus_t; i_power++)
+        one_over_two_p_power_i *= one_over_two_p;
+    return prefactor * one_over_two_p_power_i;
+}
+
+/*
     This function applies the horizontal recurrence relation of the Mcmurchie-Davidson recurrence relation for Cartesian to Hermite Gaussian transformation coefficients.
     $$E_t^{i,j+1} = E_t^{i+1,j} + (A_\tau - B_\tau) E_t^{i,j}$$
     The close form of the horizontal recurrence relation is
