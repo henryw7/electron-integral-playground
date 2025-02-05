@@ -28,6 +28,7 @@ static void overlap_general_kernel(const double A_a[4],
     const double PAy = minus_b_over_p * ABy;
     const double PAz = minus_b_over_p * ABz;
     const double one_over_two_p = 0.5 / p;
+    const double prefactor = coefficient * pow(M_PI / p, 1.5);
 
     double E_x_ij_0[(i_L + 1) * (j_L + 1)] {NAN};
     {
@@ -68,7 +69,7 @@ static void overlap_general_kernel(const double A_a[4],
 
                     const double E_ij_xyz = E_x_ij_0[i_x * (j_L + 1) + j_x] * E_y_ij_0[i_y * (j_L + 1) + j_y] * E_z_ij_0[i_z * (j_L + 1) + j_z];
                     constexpr int n_density_j = cartesian_orbital_total<j_L>;
-                    S_cartesian[i_density * n_density_j + j_density] = coefficient * E_ij_xyz * pow(M_PI / p, 1.5);
+                    S_cartesian[i_density * n_density_j + j_density] = prefactor * E_ij_xyz;
                 }
             }
         }

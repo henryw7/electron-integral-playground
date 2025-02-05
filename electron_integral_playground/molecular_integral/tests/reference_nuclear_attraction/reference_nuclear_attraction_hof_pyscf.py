@@ -8,7 +8,7 @@ mol = gto.M(
         O 0 0 0
         F 0.5 0.6 0.7
     """,
-    basis = "def2-svp"
+    basis = "def2-svp",
 )
 mol.build()
 

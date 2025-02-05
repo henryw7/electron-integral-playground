@@ -6,7 +6,8 @@ from electron_integral_playground.data_structure import Molecule, PrimitivePairD
 
 libmolecular_integral = ctypes.cdll.LoadLibrary("libmolecular_integral.so")
 
-def nuclear_attraction(pair_data: PrimitivePairDataAngularList, molecule: Molecule, charge_position: np.ndarray) -> np.ndarray:
+def nuclear_attraction(pair_data: PrimitivePairDataAngularList, molecule: Molecule, charge_position: np.ndarray, omega: float = 0.0) -> np.ndarray:
+    assert omega >= 0.0
     n_ao = molecule.n_ao
     assert n_ao > 0
     assert charge_position.ndim == 2
@@ -37,6 +38,7 @@ def nuclear_attraction(pair_data: PrimitivePairDataAngularList, molecule: Molecu
             V_tensor.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             ctypes.c_int(n_ao),
             ctypes.c_bool(molecule.spherical_basis),
+            ctypes.c_double(omega),
         )
         assert error_code == 0
 

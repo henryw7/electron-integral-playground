@@ -6,7 +6,8 @@ from electron_integral_playground.data_structure import Molecule, PrimitivePairD
 
 libmolecular_integral = ctypes.cdll.LoadLibrary("libmolecular_integral.so")
 
-def two_center(pair_data: PrimitivePairDataAngularList, molecule: Molecule) -> np.ndarray:
+def two_center(pair_data: PrimitivePairDataAngularList, molecule: Molecule, omega: float = 0.0) -> np.ndarray:
+    assert omega >= 0.0
     n_aux = molecule.n_aux
     assert n_aux > 0
     J2c_matrix = np.zeros((n_aux, n_aux), dtype = np.float64, order = "C")
@@ -35,6 +36,7 @@ def two_center(pair_data: PrimitivePairDataAngularList, molecule: Molecule) -> n
                 J2c_matrix.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
                 ctypes.c_int(n_aux),
                 ctypes.c_bool(molecule.spherical_basis),
+                ctypes.c_double(omega),
             )
             assert error_code == 0
 
