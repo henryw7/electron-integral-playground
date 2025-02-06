@@ -406,10 +406,10 @@ public:
 };
 
 template<int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_AUX_L && j_L >= 0 && j_L <= MAX_AUX_L)
-static void cartesian_to_spherical_inplace(double matrix[(i_L + 1) * (i_L + 2) / 2 * (j_L + 1) * (j_L + 2) / 2])
+static void cartesian_to_spherical_inplace(double matrix[CARTESIAN_ORBITAL_COUNT(i_L) * CARTESIAN_ORBITAL_COUNT(j_L)])
 {
-    constexpr int n_cartesian_i = (i_L + 1) * (i_L + 2) / 2;
-    constexpr int n_cartesian_j = (j_L + 1) * (j_L + 2) / 2;
+    constexpr int n_cartesian_i = CARTESIAN_ORBITAL_COUNT(i_L);
+    constexpr int n_cartesian_j = CARTESIAN_ORBITAL_COUNT(j_L);
 #pragma unroll
     for (int i = 0; i < n_cartesian_i; i++)
     {

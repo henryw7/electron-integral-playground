@@ -1,8 +1,6 @@
 
 #pragma once
 
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-
 /*
     Consistent with the following for loop:
     int index = 0;

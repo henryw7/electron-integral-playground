@@ -3,7 +3,7 @@
 
 #include "angular.h"
 
-static const double binomial_coefficients[(MAX_L * 4 + 2 + 1) * (MAX_L * 4 + 2 + 2) / 2]
+static const double binomial_coefficients[(MAX_BOYS_ORDER + 1) * (MAX_BOYS_ORDER + 2) / 2]
 {
     1,
     1,        1,
@@ -34,7 +34,7 @@ static const double binomial_coefficients[(MAX_L * 4 + 2 + 1) * (MAX_L * 4 + 2 +
     1,       26,      325,     2600,    14950,    65780,   230230,   657800,  1562275,  3124550,  5311735,  7726160,  9657700, 10400600,  9657700,  7726160,  5311735,  3124550,  1562275,   657800,   230230,    65780,    14950,     2600,      325,       26,        1,
 };
 
-static const double reverse_hermite_polynomial_coefficients[(MAX_L * 4 + 2 + 1) * (MAX_L * 4 + 2 + 2) / 2]
+static const double reverse_hermite_polynomial_coefficients[(MAX_BOYS_ORDER + 1) * (MAX_BOYS_ORDER + 2) / 2]
 {
     1,
     0,               1,

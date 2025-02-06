@@ -6,7 +6,7 @@
 
 #include <math.h>
 
-static const double boys_infinity_prefactor[MAX_L * 4 + 2 + 1] {
+static const double boys_infinity_prefactor[MAX_BOYS_ORDER + 1] {
     1.0/2.0*sqrt(M_PI),
     1.0/4.0*sqrt(M_PI),
     3.0/8.0*sqrt(M_PI),
@@ -38,7 +38,7 @@ static const double boys_infinity_prefactor[MAX_L * 4 + 2 + 1] {
 
 #define BOYS_TAYLOR_ORDER 8
 
-static const double boys_taylor_prefactor[MAX_L * 4 + 2 + 1][BOYS_TAYLOR_ORDER + 1] {
+static const double boys_taylor_prefactor[MAX_BOYS_ORDER + 1][BOYS_TAYLOR_ORDER + 1] {
     {           1.0,      -1.0/3.0,      1.0/10.0,     -1.0/42.0,     1.0/216.0,   -1.0/1320.0,    1.0/9360.0,  -1.0/75600.0,  1.0/685440.0, },
     {       1.0/3.0,      -1.0/5.0,      1.0/14.0,     -1.0/54.0,     1.0/264.0,   -1.0/1560.0,   1.0/10800.0,  -1.0/85680.0,  1.0/766080.0, },
     {       1.0/5.0,      -1.0/7.0,      1.0/18.0,     -1.0/66.0,     1.0/312.0,   -1.0/1800.0,   1.0/12240.0,  -1.0/95760.0,  1.0/846720.0, },
@@ -99,7 +99,7 @@ static const double boys_taylor_prefactor[MAX_L * 4 + 2 + 1][BOYS_TAYLOR_ORDER +
 
     For $0.2 \leq x \leq 15$, a cubic spline is used for every order ($m$) of $F_m(x)$. The interval of each spline is $5 \times 10^{-3}$ to ensure $10^{-12}$ relative error for $F_{26}(x)$.
 */
-template<int L> requires (L >= 0 && L <= MAX_L * 4 + 2)
+template<int L> requires (L >= 0 && L <= MAX_BOYS_ORDER)
 static void boys_function_evaluate(const double x, double y[L + 1])
 {
     if (x < 1e-16)

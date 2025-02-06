@@ -5,7 +5,7 @@
 
 #include "angular.h"
 
-static const double kernel_cartesian_normalization_constants[MAX_AUX_L + 1][(MAX_AUX_L + 1) * (MAX_AUX_L + 2) / 2]
+static const double kernel_cartesian_normalization_constants[MAX_AUX_L + 1][CARTESIAN_ORBITAL_COUNT(MAX_AUX_L)]
 {
     { 1.0, },
     { 1.0,                1.0,                1.0, },
@@ -25,20 +25,20 @@ static const double kernel_cartesian_normalization_constants[MAX_AUX_L + 1][(MAX
     $$\sqrt{ \frac{i_x! i_y! i_z!}{(2i_x)! (2i_y)! (2i_z)!} \frac{(2L)!}{L!} }$$
 */
 template<int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_AUX_L && j_L >= 0 && j_L <= MAX_AUX_L)
-static void kernel_cartesian_normalize(double S_cartesian[(i_L + 1) * (i_L + 2) / 2 * (j_L + 1) * (j_L + 2) / 2])
+static void kernel_cartesian_normalize(double cartesian_matrix[CARTESIAN_ORBITAL_COUNT(i_L) * CARTESIAN_ORBITAL_COUNT(j_L)])
 {
     if constexpr (i_L <= 1 && j_L <= 1)
         return;
 
-    constexpr int n_density_i = (i_L + 1) * (i_L + 2) / 2;
-    constexpr int n_density_j = (j_L + 1) * (j_L + 2) / 2;
+    constexpr int n_density_i = CARTESIAN_ORBITAL_COUNT(i_L);
+    constexpr int n_density_j = CARTESIAN_ORBITAL_COUNT(j_L);
 #pragma unroll
     for (int i = 0; i < n_density_i; i++)
     {
 #pragma unroll
         for (int j = 0; j < n_density_j; j++)
         {
-            S_cartesian[i * n_density_j + j] *= kernel_cartesian_normalization_constants[i_L][i] * kernel_cartesian_normalization_constants[j_L][j];
+            cartesian_matrix[i * n_density_j + j] *= kernel_cartesian_normalization_constants[i_L][i] * kernel_cartesian_normalization_constants[j_L][j];
         }
     }
 }
