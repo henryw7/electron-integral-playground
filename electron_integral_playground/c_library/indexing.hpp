@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <math.h>
+
 /*
     Consistent with the following for loop:
     int index = 0;
@@ -111,3 +113,39 @@ static inline int cartesian_orbital_index(const int x, const int y)
 
 template <int L> requires (L >= 0)
 constexpr int cartesian_orbital_total = lower_triangular_total<L>;
+
+/*
+    Return the value of the following array:
+    1, 2,2, 3,3,3, 4,4,4,4, 5,5,5,5,5, ...
+*/
+static inline int array_i_appear_i_time(const int i)
+{
+    return (int) ceil(0.5 * (-1.0 + sqrt(8.0 * (double) i + 9.0)));
+}
+
+/*
+    Returns the x, y, z value of
+    const int i_density = cartesian_orbital_index<L>(x, y);
+    given the value of i_density.
+*/
+template <int L> requires (L >= 0)
+static inline int cartesian_orbital_index_x(const int i_density)
+{
+    return L + 1 - array_i_appear_i_time(i_density);
+}
+
+template <int L> requires (L >= 0)
+static inline int cartesian_orbital_index_y(const int i_density)
+{
+    const int x_offset = array_i_appear_i_time(i_density) - 1;
+    const int x = L - x_offset;
+    return x_offset + ((L - x) * (L - x + 1) / 2 - i_density);
+}
+
+template <int L> requires (L >= 0)
+static inline int cartesian_orbital_index_z(const int i_density)
+{
+    const int x_offset = array_i_appear_i_time(i_density);
+    const int x = L + 1 - x_offset;
+    return x_offset + (i_density - (L - x + 1) * (L - x + 2) / 2);
+}
