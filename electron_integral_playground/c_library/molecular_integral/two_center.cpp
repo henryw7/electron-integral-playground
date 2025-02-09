@@ -22,11 +22,13 @@
             &\quad (-1)^{s_x+s_y+s_z} \frac{2\pi^{5/2} \omega}{pq\sqrt{pq + (p+q)\omega^2}} R_{t_x+s_x,t_y+s_y,t_z+s_z}^0 \left( \frac{1}{\frac{1}{p} + \frac{1}{q} + \frac{1}{\omega^2}}, \vec{P}-\vec{Q} \right)
     \end{align*}
 */
-template <int i_L, int j_L>
+template <int i_L, int j_L, int max_n_density_i_per_split>
 static void two_center_general_kernel(const double A_a[4],
                                       const double B_b[4],
                                       const double coefficient,
-                                      double J2c_cartesian[cartesian_orbital_total<i_L> * cartesian_orbital_total<j_L>],
+                                      double J2c_cartesian[max_n_density_i_per_split * cartesian_orbital_total<j_L>],
+                                      const int i_density_begin,
+                                      const int i_density_end,
                                       const double omega)
 {
     const double PQx = A_a[0] - B_b[0];
@@ -39,74 +41,82 @@ static void two_center_general_kernel(const double A_a[4],
     const double one_over_two_q = 0.5 / q;
     const double prefactor = (omega == 0.0) ? (coefficient * 2.0 * pow(M_PI, 2.5) / (p * q * sqrt(p + q)))
                                             : (coefficient * 2.0 * pow(M_PI, 2.5) * omega / (p * q * sqrt(p * q + (p + q) * omega * omega)));
+    const double pq_over_p_plus_q = (omega == 0.0) ? (p * q / (p + q))
+                                                   : (1.0 / (1.0 / p + 1.0 / q + 1.0 / (omega * omega)));
 
     // double E_i0_t[lower_triangular_even_total<i_L>] {NAN};
     // mcmurchie_davidson_form_E_i0_t_0AB<i_L>(one_over_two_p, E_i0_t);
     // double E_k0_s[lower_triangular_even_total<j_L>] {NAN};
     // mcmurchie_davidson_form_E_i0_t_0AB<j_L>(one_over_two_q, E_k0_s);
 
-    double R_xyz_0[triple_lower_triangular_total<i_L + j_L>] {NAN};
+    constexpr bool store_R_xyz_0 = triple_lower_triangular_total<i_L + j_L> <= MAX_REGISTER_MATRIX_DOUBLE_COUNT;
+    constexpr int R_xyz_t_size = store_R_xyz_0 ? triple_lower_triangular_total<i_L + j_L> : i_L + j_L + 1;
+    double R_xyz_t[R_xyz_t_size] {NAN};
+    if constexpr (store_R_xyz_0)
     {
         double R_000_m[i_L + j_L + 1] {NAN};
-        const double pq_over_p_plus_q = (omega == 0.0) ? (p * q / (p + q))
-                                                       : (1.0 / (1.0 / p + 1.0 / q + 1.0 / (omega * omega)));
         mcmurchie_davidson_form_R_000_m<i_L + j_L>(pq_over_p_plus_q, PQ_2, R_000_m);
-        mcmurchie_davidson_R_000_m_to_R_xyz_0<i_L + j_L>(PQx, PQy, PQz, R_000_m, R_xyz_0);
+        mcmurchie_davidson_R_000_m_to_R_xyz_0<i_L + j_L>(PQx, PQy, PQz, R_000_m, R_xyz_t);
+    }
+    else
+    {
+        mcmurchie_davidson_form_R_000_m<i_L + j_L>(pq_over_p_plus_q, PQ_2, R_xyz_t);
     }
 
-#pragma unroll
-    for (int i_x = i_L; i_x >= 0; i_x--)
+    for (int i_density = i_density_begin; i_density < i_density_end; i_density++)
     {
+        const int i_x = cartesian_orbital_index_x<i_L>(i_density);
+        const int i_y = cartesian_orbital_index_y<i_L>(i_density);
+        const int i_z = cartesian_orbital_index_z<i_L>(i_density);
+
 #pragma unroll
-        for (int i_y = i_L - i_x; i_y >= 0; i_y--)
+        for (int j_x = j_L; j_x >= 0; j_x--)
         {
-            const int i_z = i_L - i_x - i_y;
-            const int i_density = cartesian_orbital_index<i_L>(i_x, i_y);
-
 #pragma unroll
-            for (int j_x = j_L; j_x >= 0; j_x--)
+            for (int j_y = j_L - j_x; j_y >= 0; j_y--)
             {
-#pragma unroll
-                for (int j_y = j_L - j_x; j_y >= 0; j_y--)
-                {
-                    const int j_z = j_L - j_x - j_y;
-                    const int j_density = cartesian_orbital_index<j_L>(j_x, j_y);
+                const int j_z = j_L - j_x - j_y;
+                const int j_density = cartesian_orbital_index<j_L>(j_x, j_y);
 
-                    double J2c_ij_xyz = 0.0;
-                    for (int t_x = i_x % 2; t_x <= i_x; t_x += 2)
+                double J2c_ij_xyz = 0.0;
+                for (int t_x = i_x % 2; t_x <= i_x; t_x += 2)
+                {
+                    for (int t_y = i_y % 2; t_y <= i_y; t_y += 2)
                     {
-                        for (int t_y = i_y % 2; t_y <= i_y; t_y += 2)
+                        for (int t_z = i_z % 2; t_z <= i_z; t_z += 2)
                         {
-                            for (int t_z = i_z % 2; t_z <= i_z; t_z += 2)
+                            for (int s_x = j_x % 2; s_x <= j_x; s_x += 2)
                             {
-                                for (int s_x = j_x % 2; s_x <= j_x; s_x += 2)
+                                for (int s_y = j_y % 2; s_y <= j_y; s_y += 2)
                                 {
-                                    for (int s_y = j_y % 2; s_y <= j_y; s_y += 2)
+                                    for (int s_z = j_z % 2; s_z <= j_z; s_z += 2)
                                     {
-                                        for (int s_z = j_z % 2; s_z <= j_z; s_z += 2)
-                                        {
-                                            J2c_ij_xyz += ((s_x + s_y + s_z) % 2 == 0 ? 1 : -1)
-                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_p, i_x, t_x)
-                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_p, i_y, t_y)
-                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_p, i_z, t_z)
-                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, j_x, s_x)
-                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, j_y, s_y)
-                                                          * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, j_z, s_z)
-                                                          * R_xyz_0[triple_lower_triangular_index<i_L + j_L>(t_x + s_x, t_y + s_y, t_z + s_z)];
-                                        }
+                                        double R_xyz_0 = NAN;
+                                        if constexpr (store_R_xyz_0)
+                                            R_xyz_0 = R_xyz_t[triple_lower_triangular_index<i_L + j_L>(t_x + s_x, t_y + s_y, t_z + s_z)];
+                                        else
+                                            R_xyz_0 = mcmurchie_davidson_R_000_m_to_R_xyz_0<i_L + j_L>(PQx, PQy, PQz, R_xyz_t, t_x + s_x, t_y + s_y, t_z + s_z);
+                                        J2c_ij_xyz += ((s_x + s_y + s_z) % 2 == 0 ? 1 : -1)
+                                                      * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_p, i_x, t_x)
+                                                      * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_p, i_y, t_y)
+                                                      * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_p, i_z, t_z)
+                                                      * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, j_x, s_x)
+                                                      * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, j_y, s_y)
+                                                      * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, j_z, s_z)
+                                                      * R_xyz_0;
                                     }
                                 }
                             }
                         }
                     }
-                    constexpr int n_density_j = cartesian_orbital_total<j_L>;
-                    J2c_cartesian[i_density * n_density_j + j_density] = prefactor * J2c_ij_xyz;
                 }
+                constexpr int n_density_j = cartesian_orbital_total<j_L>;
+                J2c_cartesian[(i_density - i_density_begin) * n_density_j + j_density] = prefactor * J2c_ij_xyz;
             }
         }
     }
 
-    kernel_cartesian_normalize<i_L, j_L>(J2c_cartesian);
+    kernel_cartesian_normalize<i_L, j_L>(J2c_cartesian, i_density_begin, i_density_end);
 }
 
 template <int i_L, int j_L>
@@ -128,37 +138,73 @@ static void two_center_general_kernel_wrapper(const int i_aux,
     if (i_L == j_L && i_aux_start > j_aux_start)
         return;
 
-    constexpr int n_density_i = cartesian_orbital_total<i_L>;
-    constexpr int n_density_j = cartesian_orbital_total<j_L>;
-    double J2c_cartesian[n_density_i * n_density_j] {NAN};
     const double A_a[4] { aux_A_a[i_aux * 4 + 0], aux_A_a[i_aux * 4 + 1], aux_A_a[i_aux * 4 + 2], aux_A_a[i_aux * 4 + 3], };
     const double B_b[4] { aux_B_b[j_aux * 4 + 0], aux_B_b[j_aux * 4 + 1], aux_B_b[j_aux * 4 + 2], aux_B_b[j_aux * 4 + 3], };
     const double coefficient = aux_i_coefficient[i_aux] * aux_j_coefficient[j_aux];
 
-    two_center_general_kernel<i_L, j_L>(A_a, B_b, coefficient, J2c_cartesian, omega);
+    constexpr int n_density_i = cartesian_orbital_total<i_L>;
+    constexpr int n_density_j = cartesian_orbital_total<j_L>;
 
-    if (spherical)
+    constexpr int n_density_i_split = (n_density_i * n_density_j + MAX_REGISTER_MATRIX_DOUBLE_COUNT - 1) / MAX_REGISTER_MATRIX_DOUBLE_COUNT;
+    constexpr int max_n_density_i_per_split = (n_density_i + n_density_i_split - 1) / n_density_i_split;
+
+    for (int i_density_begin = 0; i_density_begin < n_density_i; i_density_begin += max_n_density_i_per_split)
     {
-        cartesian_to_spherical_inplace<i_L, j_L>(J2c_cartesian);
-        for (int i = 0; i < 2 * i_L + 1; i++)
+        const int i_density_end = MIN(i_density_begin + max_n_density_i_per_split, n_density_i);
+        double J2c_cartesian[max_n_density_i_per_split * n_density_j] {NAN};
+
+        two_center_general_kernel<i_L, j_L, max_n_density_i_per_split>(A_a, B_b, coefficient, J2c_cartesian, i_density_begin, i_density_end, omega);
+
+        if (spherical)
         {
-            for (int j = 0; j < 2 * j_L + 1; j++)
+            if constexpr (n_density_i_split == 1)
             {
-                atomic_add(J2c_matrix + ((i_aux_start + i) * n_aux + (j_aux_start + j)), J2c_cartesian[i * n_density_j + j]);
-                if (i_aux_start != j_aux_start)
-                    atomic_add(J2c_matrix + ((i_aux_start + i) + (j_aux_start + j) * n_aux), J2c_cartesian[i * n_density_j + j]);
+                cartesian_to_spherical_2d_inplace<i_L, j_L>(J2c_cartesian);
+                for (int i = 0; i < 2 * i_L + 1; i++)
+                {
+                    for (int j = 0; j < 2 * j_L + 1; j++)
+                    {
+                        atomic_add(J2c_matrix + ((i_aux_start + i) * n_aux + (j_aux_start + j)), J2c_cartesian[i * n_density_j + j]);
+                        if (i_aux_start != j_aux_start)
+                            atomic_add(J2c_matrix + ((i_aux_start + i) + (j_aux_start + j) * n_aux), J2c_cartesian[i * n_density_j + j]);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = i_density_begin; i < i_density_end; i++)
+                {
+                    cartesian_to_spherical_1d_inplace<j_L>(J2c_cartesian + ((i - i_density_begin) * n_density_j));
+                }
+                for (int j = 0; j < 2 * j_L + 1; j++)
+                {
+                    double J2c_spherical[2 * i_L + 1] {0.0};
+                    for (int i = i_density_begin; i < i_density_end; i++)
+                    {
+                        cartesian_to_spherical_1d_scatter<i_L, 1>(J2c_cartesian[(i - i_density_begin) * n_density_j + j], i, J2c_spherical);
+                    }
+
+                    for (int i = 0; i < 2 * i_L + 1; i++)
+                    {
+                        if (J2c_spherical[i] == 0.0)
+                            continue;
+                        atomic_add(J2c_matrix + ((i_aux_start + i) * n_aux + (j_aux_start + j)), J2c_spherical[i]);
+                        if (i_aux_start != j_aux_start)
+                            atomic_add(J2c_matrix + ((i_aux_start + i) + (j_aux_start + j) * n_aux), J2c_spherical[i]);
+                    }
+                }
             }
         }
-    }
-    else
-    {
-        for (int i = 0; i < n_density_i; i++)
+        else
         {
-            for (int j = 0; j < n_density_j; j++)
+            for (int i = i_density_begin; i < i_density_end; i++)
             {
-                atomic_add(J2c_matrix + ((i_aux_start + i) * n_aux + (j_aux_start + j)), J2c_cartesian[i * n_density_j + j]);
-                if (i_aux_start != j_aux_start)
-                    atomic_add(J2c_matrix + ((i_aux_start + i) + (j_aux_start + j) * n_aux), J2c_cartesian[i * n_density_j + j]);
+                for (int j = 0; j < n_density_j; j++)
+                {
+                    atomic_add(J2c_matrix + ((i_aux_start + i) * n_aux + (j_aux_start + j)), J2c_cartesian[(i - i_density_begin) * n_density_j + j]);
+                    if (i_aux_start != j_aux_start)
+                        atomic_add(J2c_matrix + ((i_aux_start + i) + (j_aux_start + j) * n_aux), J2c_cartesian[(i - i_density_begin) * n_density_j + j]);
+                }
             }
         }
     }

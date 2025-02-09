@@ -20,14 +20,19 @@ template<int L, int increment> requires (L >= 0 && L <= MAX_AUX_L)
 class CartesianToSpherical
 {
 public:
-    static void apply(double* vector);
+    static void apply_inplace(double* vector);
+
+    static void scatter(const double input, const int i_input_cartesian, double* output);
 };
 
 template<int increment>
 class CartesianToSpherical<0, increment>
 {
 public:
-    static void apply(double* vector) {}
+    static void apply_inplace(double* vector) {}
+
+    static void scatter(const double input, const int i_input_cartesian, double* output)
+    { output[0] += input; }
 };
 
 // Note: the correct spherical Gaussian orbital order for p orbital is y,z,x.
@@ -36,7 +41,10 @@ template<int increment>
 class CartesianToSpherical<1, increment>
 {
 public:
-    static void apply(double* vector) {}
+    static void apply_inplace(double* vector) {}
+
+    static void scatter(const double input, const int i_input_cartesian, double* output)
+    { output[i_input_cartesian * increment] += input; }
 };
 
 template<int increment>
@@ -56,16 +64,29 @@ public:
         1.0/sqrt(5.0),   0,   0,  1.0/sqrt(5.0),   0, 1.0/sqrt(5.0), // s
     };
 
-    static void apply(double* vector)
+    static void apply_inplace(double* vector)
     {
         const double spherical_z2 = vector[5 * increment] - 0.5 * (vector[0 * increment] + vector[3 * increment]);
-        const double spherical_x2_y2 = 0.5 * sqrt(3.0) * (vector[0 * increment] - vector[3 * increment]);
+        const double spherical_x2_y2 = sqrt(3.0)/2.0 * (vector[0 * increment] - vector[3 * increment]);
         vector[0 * increment] = vector[1 * increment]; // xy
         vector[1 * increment] = vector[4 * increment]; // yz
         vector[3 * increment] = vector[2 * increment]; // xz
         vector[2 * increment] = spherical_z2;
         vector[4 * increment] = spherical_x2_y2;
         vector[5 * increment] = NAN;
+    }
+
+    static void scatter(const double input, const int i_input_cartesian, double* output)
+    {
+        switch (i_input_cartesian)
+        {
+            case 0: output[2 * increment] += -0.5 * input; output[4 * increment] +=  sqrt(3.0)/2.0 * input; break;
+            case 1: output[0 * increment] += input; break;
+            case 2: output[3 * increment] += input; break;
+            case 3: output[2 * increment] += -0.5 * input; output[4 * increment] += -sqrt(3.0)/2.0 * input; break;
+            case 4: output[1 * increment] += input; break;
+            case 5: output[2 * increment] += input; break;
+        }
     }
 };
 
@@ -90,7 +111,7 @@ class CartesianToSpherical<3, increment>
     };
 
 public:
-    static void apply(double* vector)
+    static void apply_inplace(double* vector)
     {
         const double spherical_minus_3 = 1.5/sqrt(2.0) * vector[1 * increment] - 0.5*sqrt(2.5) * vector[6 * increment];
         const double spherical_minus_1 = -0.5*sqrt(0.3) * vector[1 * increment] - 0.5*sqrt(1.5) * vector[6 * increment] + 2.0*sqrt(0.3) * vector[8 * increment];
@@ -108,6 +129,23 @@ public:
         vector[7 * increment] = NAN;
         vector[8 * increment] = NAN;
         vector[9 * increment] = NAN;
+    }
+
+    static void scatter(const double input, const int i_input_cartesian, double* output)
+    {
+        switch (i_input_cartesian)
+        {
+            case 0: output[4 * increment] += -0.5*sqrt(1.5) * input; output[6 * increment] +=  0.5*sqrt(2.5) * input; break;
+            case 1: output[0 * increment] +=  1.5/sqrt(2.0) * input; output[2 * increment] += -0.5*sqrt(0.3) * input; break;
+            case 2: output[3 * increment] += -1.5/sqrt(5.0) * input; output[5 * increment] +=  sqrt(3.0)/2.0 * input; break;
+            case 3: output[4 * increment] += -0.5*sqrt(0.3) * input; output[6 * increment] += -1.5/sqrt(2.0) * input; break;
+            case 4: output[1 * increment] += input; break;
+            case 5: output[4 * increment] +=  2.0*sqrt(0.3) * input; break;
+            case 6: output[0 * increment] += -0.5*sqrt(2.5) * input; output[2 * increment] += -0.5*sqrt(1.5) * input; break;
+            case 7: output[3 * increment] += -1.5/sqrt(5.0) * input; output[5 * increment] += -sqrt(3.0)/2.0 * input; break;
+            case 8: output[2 * increment] +=  2.0*sqrt(0.3) * input; break;
+            case 9: output[3 * increment] += input; break;
+        }
     }
 };
 
@@ -128,7 +166,7 @@ class CartesianToSpherical<4, increment>
     };
 
 public:
-    static void apply(double* vector)
+    static void apply_inplace(double* vector)
     {
         const double spherical[9] {
             sqrt(5.0/4.0) * (vector[1 * increment] - vector[6 * increment]),
@@ -147,6 +185,28 @@ public:
 #pragma unroll
         for (int i = 9; i < 15; i++)
             vector[i * increment] = NAN;
+    }
+
+    static void scatter(const double input, const int i_input_cartesian, double* output)
+    {
+        switch (i_input_cartesian)
+        {
+            case  0: output[4 * increment] +=          3.0/8.0 * input; output[6 * increment] +=  -sqrt(5.0/16.0) * input; output[8 * increment] += sqrt(35.0/64.0) * input; break;
+            case  1: output[0 * increment] +=    sqrt(5.0/4.0) * input; output[2 * increment] +=  -sqrt(5.0/28.0) * input; break;
+            case  2: output[5 * increment] += -sqrt(45.0/56.0) * input; output[7 * increment] +=    sqrt(5.0/8.0) * input; break;
+            case  3: output[4 * increment] += sqrt(27.0/560.0) * input; output[8 * increment] += -sqrt(27.0/16.0) * input; break;
+            case  4: output[1 * increment] +=    sqrt(9.0/8.0) * input; output[3 * increment] +=  -sqrt(9.0/56.0) * input; break;
+            case  5: output[4 * increment] += -sqrt(27.0/35.0) * input; output[6 * increment] +=  sqrt(27.0/28.0) * input; break;
+            case  6: output[0 * increment] +=   -sqrt(5.0/4.0) * input; output[2 * increment] +=  -sqrt(5.0/28.0) * input; break;
+            case  7: output[5 * increment] +=  -sqrt(9.0/56.0) * input; output[7 * increment] +=   -sqrt(9.0/8.0) * input; break;
+            case  8: output[2 * increment] +=    sqrt(9.0/7.0) * input; break;
+            case  9: output[5 * increment] +=   sqrt(10.0/7.0) * input; break;
+            case 10: output[4 * increment] +=          3.0/8.0 * input; output[6 * increment] +=   sqrt(5.0/16.0) * input; output[8 * increment] += sqrt(35.0/64.0) * input; break;
+            case 11: output[1 * increment] +=   -sqrt(5.0/8.0) * input; output[3 * increment] += -sqrt(45.0/56.0) * input; break;
+            case 12: output[4 * increment] += -sqrt(27.0/35.0) * input; output[6 * increment] += -sqrt(27.0/28.0) * input; break;
+            case 13: output[3 * increment] +=   sqrt(10.0/7.0) * input; break;
+            case 14: output[4 * increment] += input; break;
+        }
     }
 };
 
@@ -169,7 +229,7 @@ class CartesianToSpherical<5, increment>
     };
 
 public:
-    static void apply(double* vector)
+    static void apply_inplace(double* vector)
     {
         const double spherical[11] {
             sqrt(175.0/128.0) * vector[1 * increment] - sqrt(75.0/32.0) * vector[6 * increment] + sqrt(63.0/128.0) * vector[15 * increment],
@@ -190,6 +250,34 @@ public:
 #pragma unroll
         for (int i = 11; i < 21; i++)
             vector[i * increment] = NAN;
+    }
+
+    static void scatter(const double input, const int i_input_cartesian, double* output)
+    {
+        switch (i_input_cartesian)
+        {
+            case  0: output[6 * increment] +=   sqrt(15.0/64.0) * input; output[8 * increment] += -sqrt(35.0/128.0) * input; output[10 * increment] +=  sqrt(63.0/128.0) * input; break;
+            case  1: output[0 * increment] += sqrt(175.0/128.0) * input; output[2 * increment] += -sqrt(35.0/128.0) * input; output[ 4 * increment] +=   sqrt(5.0/192.0) * input; break;
+            case  2: output[5 * increment] +=           5.0/8.0 * input; output[7 * increment] +=  -sqrt(35.0/48.0) * input; output[ 9 * increment] +=   sqrt(35.0/64.0) * input; break;
+            case  3: output[6 * increment] +=   sqrt(5.0/112.0) * input; output[8 * increment] +=    sqrt(5.0/96.0) * input; output[10 * increment] +=  -sqrt(75.0/32.0) * input; break;
+            case  4: output[1 * increment] +=     sqrt(5.0/4.0) * input; output[3 * increment] +=   -sqrt(5.0/12.0) * input; break;
+            case  5: output[6 * increment] +=  -sqrt(45.0/28.0) * input; output[8 * increment] +=     sqrt(5.0/6.0) * input; break;
+            case  6: output[0 * increment] +=  -sqrt(75.0/32.0) * input; output[2 * increment] +=   -sqrt(5.0/96.0) * input; output[ 4 * increment] +=   sqrt(5.0/112.0) * input; break;
+            case  7: output[5 * increment] +=  sqrt(15.0/112.0) * input; output[9 * increment] +=  -sqrt(27.0/16.0) * input; break;
+            case  8: output[2 * increment] +=     sqrt(3.0/2.0) * input; output[4 * increment] +=   -sqrt(9.0/28.0) * input; break;
+            case  9: output[5 * increment] +=  -sqrt(25.0/21.0) * input; output[7 * increment] +=     sqrt(5.0/4.0) * input; break;
+            case 10: output[6 * increment] +=   sqrt(5.0/192.0) * input; output[8 * increment] +=  sqrt(35.0/128.0) * input; output[10 * increment] += sqrt(175.0/128.0) * input; break;
+            case 11: output[1 * increment] +=    -sqrt(5.0/4.0) * input; output[3 * increment] +=   -sqrt(5.0/12.0) * input; break;
+            case 12: output[6 * increment] +=   -sqrt(9.0/28.0) * input; output[8 * increment] +=    -sqrt(3.0/2.0) * input; break;
+            case 13: output[3 * increment] +=     sqrt(5.0/3.0) * input; break;
+            case 14: output[6 * increment] +=     sqrt(5.0/3.0) * input; break;
+            case 15: output[0 * increment] +=  sqrt(63.0/128.0) * input; output[2 * increment] +=  sqrt(35.0/128.0) * input; output[ 4 * increment] +=   sqrt(15.0/64.0) * input; break;
+            case 16: output[5 * increment] +=           5.0/8.0 * input; output[7 * increment] +=   sqrt(35.0/48.0) * input; output[ 9 * increment] +=   sqrt(35.0/64.0) * input; break;
+            case 17: output[2 * increment] +=    -sqrt(5.0/6.0) * input; output[4 * increment] +=  -sqrt(45.0/28.0) * input; break;
+            case 18: output[5 * increment] +=  -sqrt(25.0/21.0) * input; output[7 * increment] +=    -sqrt(5.0/4.0) * input; break;
+            case 19: output[4 * increment] +=     sqrt(5.0/3.0) * input; break;
+            case 20: output[5 * increment] += input; break;
+        }
     }
 };
 
@@ -214,7 +302,7 @@ class CartesianToSpherical<6, increment>
     };
 
 public:
-    static void apply(double* vector)
+    static void apply_inplace(double* vector)
     {
         const double spherical[13] {
             sqrt(189.0/128.0) * (vector[1 * increment] + vector[15 * increment]) - sqrt(125.0/32.0) * vector[6 * increment],
@@ -237,6 +325,41 @@ public:
 #pragma unroll
         for (int i = 13; i < 28; i++)
             vector[i * increment] = NAN;
+    }
+
+    static void scatter(const double input, const int i_input_cartesian, double* output)
+    {
+        switch (i_input_cartesian)
+        {
+            case  0: output[6 * increment] +=          -5.0/16.0 * input; output[ 8 * increment] +=   sqrt(105.0/512.0) * input; output[10 * increment] +=  -sqrt(63.0/256.0) * input; output[12 * increment] +=   sqrt(231.0/512.0) * input; break;
+            case  1: output[0 * increment] +=  sqrt(189.0/128.0) * input; output[ 2 * increment] +=   -sqrt(63.0/176.0) * input; output[ 4 * increment] += sqrt(105.0/1408.0) * input; break;
+            case  2: output[7 * increment] +=  sqrt(525.0/704.0) * input; output[ 9 * increment] += -sqrt(945.0/1408.0) * input; output[11 * increment] +=   sqrt(63.0/128.0) * input; break;
+            case  3: output[6 * increment] += -sqrt(75.0/2816.0) * input; output[ 8 * increment] +=   sqrt(35.0/5632.0) * input; output[10 * increment] += sqrt(525.0/2816.0) * input; output[12 * increment] += -sqrt(1575.0/512.0) * input; break;
+            case  4: output[1 * increment] +=  sqrt(175.0/128.0) * input; output[ 3 * increment] += -sqrt(945.0/1408.0) * input; output[ 5 * increment] += sqrt(175.0/2112.0) * input; break;
+            case  5: output[6 * increment] +=  sqrt(675.0/704.0) * input; output[ 8 * increment] +=    -sqrt(35.0/22.0) * input; output[10 * increment] +=  sqrt(525.0/704.0) * input; break;
+            case  6: output[0 * increment] +=  -sqrt(125.0/32.0) * input; output[ 4 * increment] +=    sqrt(25.0/352.0) * input; break;
+            case  7: output[7 * increment] +=   sqrt(25.0/176.0) * input; output[ 9 * increment] +=    sqrt(45.0/352.0) * input; output[11 * increment] +=   -sqrt(75.0/32.0) * input; break;
+            case  8: output[2 * increment] +=    sqrt(75.0/44.0) * input; output[ 4 * increment] +=    -sqrt(10.0/11.0) * input; break;
+            case  9: output[7 * increment] +=  -sqrt(125.0/44.0) * input; output[ 9 * increment] +=     sqrt(25.0/22.0) * input; break;
+            case 10: output[6 * increment] += -sqrt(75.0/2816.0) * input; output[ 8 * increment] +=  -sqrt(35.0/5632.0) * input; output[10 * increment] += sqrt(525.0/2816.0) * input; output[12 * increment] +=  sqrt(1575.0/512.0) * input; break;
+            case 11: output[1 * increment] +=   -sqrt(75.0/32.0) * input; output[ 3 * increment] +=   -sqrt(45.0/352.0) * input; output[ 5 * increment] +=   sqrt(25.0/176.0) * input; break;
+            case 12: output[6 * increment] += sqrt(405.0/1232.0) * input; output[10 * increment] +=  -sqrt(405.0/176.0) * input; break;
+            case 13: output[3 * increment] +=    sqrt(45.0/22.0) * input; output[ 5 * increment] +=    -sqrt(25.0/44.0) * input; break;
+            case 14: output[6 * increment] +=   -sqrt(75.0/44.0) * input; output[ 8 * increment] +=     sqrt(35.0/22.0) * input; break;
+            case 15: output[0 * increment] +=  sqrt(189.0/128.0) * input; output[ 2 * increment] +=    sqrt(63.0/176.0) * input; output[ 4 * increment] += sqrt(105.0/1408.0) * input; break;
+            case 16: output[7 * increment] += sqrt(175.0/2112.0) * input; output[ 9 * increment] +=  sqrt(945.0/1408.0) * input; output[11 * increment] +=  sqrt(175.0/128.0) * input; break;
+            case 17: output[2 * increment] +=   -sqrt(75.0/44.0) * input; output[ 4 * increment] +=    -sqrt(10.0/11.0) * input; break;
+            case 18: output[7 * increment] +=   -sqrt(25.0/44.0) * input; output[ 9 * increment] +=    -sqrt(45.0/22.0) * input; break;
+            case 19: output[4 * increment] +=    sqrt(70.0/33.0) * input; break;
+            case 20: output[7 * increment] +=    sqrt(21.0/11.0) * input; break;
+            case 21: output[6 * increment] +=          -5.0/16.0 * input; output[ 8 * increment] += -sqrt(105.0/512.0) * input; output[10 * increment] +=   -sqrt(63.0/256.0) * input; output[12 * increment] +=  -sqrt(231.0/512.0) * input; break;
+            case 22: output[1 * increment] +=   sqrt(63.0/128.0) * input; output[ 3 * increment] += sqrt(945.0/1408.0) * input; output[ 5 * increment] +=   sqrt(525.0/704.0) * input; break;
+            case 23: output[6 * increment] +=  sqrt(675.0/704.0) * input; output[ 8 * increment] +=    sqrt(35.0/22.0) * input; output[10 * increment] +=   sqrt(525.0/704.0) * input; break;
+            case 24: output[3 * increment] +=   -sqrt(25.0/22.0) * input; output[ 5 * increment] +=  -sqrt(125.0/44.0) * input; break;
+            case 25: output[6 * increment] +=   -sqrt(75.0/44.0) * input; output[ 8 * increment] +=   -sqrt(35.0/22.0) * input; break;
+            case 26: output[5 * increment] +=    sqrt(21.0/11.0) * input; break;
+            case 27: output[6 * increment] += input; break;
+        }
     }
 };
 
@@ -263,7 +386,7 @@ class CartesianToSpherical<7, increment>
     };
 
 public:
-    static void apply(double* vector)
+    static void apply_inplace(double* vector)
     {
         const double spherical[15] {
             7.0*sqrt(33.0)/32.0 * vector[1 * increment] - 35.0*sqrt(5.0)/32.0 * vector[6 * increment] + 63.0/32.0 * vector[15 * increment] - sqrt(429.0)/32.0 * vector[28 * increment],
@@ -288,6 +411,49 @@ public:
 #pragma unroll
         for (int i = 15; i < 36; i++)
             vector[i * increment] = NAN;
+    }
+
+    static void scatter(const double input, const int i_input_cartesian, double* output)
+    {
+        switch (i_input_cartesian)
+        {
+            case  0: output[8 * increment] += -5.0*sqrt(7.0)/32.0 * input; output[10 * increment] += 3.0*sqrt(21.0)/32.0 * input; output[12 * increment] += -sqrt(231.0)/32.0 * input; output[14 * increment] += sqrt(429.0)/32.0 * input; break;
+            case  1: output[0 * increment] += 7.0*sqrt(33.0)/32.0 * input; output[2 * increment] += -5.0*sqrt(3003.0)/416.0 * input; output[4 * increment] += 9.0*sqrt(273.0)/416.0 * input; output[6 * increment] += -5.0*sqrt(91.0)/416.0 * input; break;
+            case  2: output[7 * increment] += -35.0*sqrt(13.0)/208.0 * input; output[9 * increment] += 15.0*sqrt(546.0)/416.0 * input; output[11 * increment] += -3.0*sqrt(3003.0)/208.0 * input; output[13 * increment] += sqrt(462.0)/32.0 * input; break;
+            case  3: output[8 * increment] += -15.0*sqrt(3003.0)/4576.0 * input; output[10 * increment] += -9.0*sqrt(1001.0)/4576.0 * input; output[12 * increment] += 27.0*sqrt(91.0)/416.0 * input; output[14 * increment] += -63.0/32.0 * input; break;
+            case  4: output[1 * increment] += 3.0*sqrt(42.0)/16.0 * input; output[3 * increment] += -3.0*sqrt(273.0)/52.0 * input; output[5 * increment] += 15.0*sqrt(6006.0)/2288.0 * input; break;
+            case  5: output[8 * increment] += 15.0*sqrt(3003.0)/572.0 * input; output[10 * increment] += -45.0*sqrt(1001.0)/1144.0 * input; output[12 * increment] += 9.0*sqrt(91.0)/104.0 * input; break;
+            case  6: output[0 * increment] += -35.0*sqrt(5.0)/32.0 * input; output[2 * increment] += 5.0*sqrt(455.0)/416.0 * input; output[4 * increment] += 15.0*sqrt(5005.0)/4576.0 * input; output[6 * increment] += -5.0*sqrt(15015.0)/4576.0 * input; break;
+            case  7: output[7 * increment] += -35.0*sqrt(429.0)/2288.0 * input; output[9 * increment] += 15.0*sqrt(2002.0)/4576.0 * input; output[11 * increment] += 15.0*sqrt(91.0)/208.0 * input; output[13 * increment] += -15.0*sqrt(14.0)/32.0 * input; break;
+            case  8: output[2 * increment] += 15.0*sqrt(91.0)/104.0 * input; output[4 * increment] += -45.0*sqrt(1001.0)/1144.0 * input; output[6 * increment] += 5.0*sqrt(3003.0)/572.0 * input; break;
+            case  9: output[7 * increment] += 35.0*sqrt(2145.0)/1144.0 * input; output[9 * increment] += -5.0*sqrt(10010.0)/286.0 * input; output[11 * increment] += 5.0*sqrt(455.0)/104.0 * input; break;
+            case 10: output[8 * increment] += -5.0*sqrt(15015.0)/4576.0 * input; output[10 * increment] += -15.0*sqrt(5005.0)/4576.0 * input; output[12 * increment] += 5.0*sqrt(455.0)/416.0 * input; output[14 * increment] += 35.0*sqrt(5.0)/32.0 * input; break;
+            case 11: output[1 * increment] += -5.0*sqrt(10.0)/8.0 * input; output[5 * increment] += 15.0*sqrt(1430.0)/1144.0 * input; break;
+            case 12: output[8 * increment] += 15.0*sqrt(143.0)/286.0 * input; output[10 * increment] += 15.0*sqrt(429.0)/572.0 * input; output[12 * increment] += -15.0*sqrt(39.0)/52.0 * input; break;
+            case 13: output[3 * increment] += 5.0*sqrt(65.0)/26.0 * input; output[5 * increment] += -5.0*sqrt(1430.0)/143.0 * input; break;
+            case 14: output[8 * increment] += -5.0*sqrt(15015.0)/286.0 * input; output[10 * increment] += 5.0*sqrt(5005.0)/286.0 * input; break;
+            case 15: output[0 * increment] += 63.0/32.0 * input; output[2 * increment] += 27.0*sqrt(91.0)/416.0 * input; output[4 * increment] += 9.0*sqrt(1001.0)/4576.0 * input; output[6 * increment] += -15.0*sqrt(3003.0)/4576.0 * input; break;
+            case 16: output[7 * increment] += -35.0*sqrt(429.0)/2288.0 * input; output[9 * increment] += -15.0*sqrt(2002.0)/4576.0 * input; output[11 * increment] += 15.0*sqrt(91.0)/208.0 * input; output[13 * increment] += 15.0*sqrt(14.0)/32.0 * input; break;
+            case 17: output[2 * increment] += -15.0*sqrt(39.0)/52.0 * input; output[4 * increment] += -15.0*sqrt(429.0)/572.0 * input; output[6 * increment] += 15.0*sqrt(143.0)/286.0 * input; break;
+            case 18: output[7 * increment] += 15.0*sqrt(1001.0)/572.0 * input; output[11 * increment] += -15.0*sqrt(39.0)/52.0 * input; break;
+            case 19: output[4 * increment] += 15.0*sqrt(1001.0)/286.0 * input; output[6 * increment] += -5.0*sqrt(3003.0)/286.0 * input; break;
+            case 20: output[7 * increment] += -21.0*sqrt(429.0)/286.0 * input; output[9 * increment] += 9.0*sqrt(2002.0)/286.0 * input; break;
+            case 21: output[8 * increment] += -5.0*sqrt(91.0)/416.0 * input; output[10 * increment] += -9.0*sqrt(273.0)/416.0 * input; output[12 * increment] += -5.0*sqrt(3003.0)/416.0 * input; output[14 * increment] += -7.0*sqrt(33.0)/32.0 * input; break;
+            case 22: output[1 * increment] += 3.0*sqrt(42.0)/16.0 * input; output[3 * increment] += 3.0*sqrt(273.0)/52.0 * input; output[5 * increment] += 15.0*sqrt(6006.0)/2288.0 * input; break;
+            case 23: output[8 * increment] += 5.0*sqrt(3003.0)/572.0 * input; output[10 * increment] += 45.0*sqrt(1001.0)/1144.0 * input; output[12 * increment] += 15.0*sqrt(91.0)/104.0 * input; break;
+            case 24: output[3 * increment] += -5.0*sqrt(65.0)/26.0 * input; output[5 * increment] += -5.0*sqrt(1430.0)/143.0 * input; break;
+            case 25: output[8 * increment] += -5.0*sqrt(3003.0)/286.0 * input; output[10 * increment] += -15.0*sqrt(1001.0)/286.0 * input; break;
+            case 26: output[5 * increment] += 3.0*sqrt(6006.0)/143.0 * input; break;
+            case 27: output[8 * increment] += 2.0*sqrt(91.0)/13.0 * input; break;
+            case 28: output[0 * increment] += -sqrt(429.0)/32.0 * input; output[2 * increment] += -sqrt(231.0)/32.0 * input; output[4 * increment] += -3.0*sqrt(21.0)/32.0 * input; output[6 * increment] += -5.0*sqrt(7.0)/32.0 * input; break;
+            case 29: output[7 * increment] += -35.0*sqrt(13.0)/208.0 * input; output[9 * increment] += -15.0*sqrt(546.0)/416.0 * input; output[11 * increment] += -3.0*sqrt(3003.0)/208.0 * input; output[13 * increment] += -sqrt(462.0)/32.0 * input; break;
+            case 30: output[2 * increment] += 9.0*sqrt(91.0)/104.0 * input; output[4 * increment] += 45.0*sqrt(1001.0)/1144.0 * input; output[6 * increment] += 15.0*sqrt(3003.0)/572.0 * input; break;
+            case 31: output[7 * increment] += 35.0*sqrt(2145.0)/1144.0 * input; output[9 * increment] += 5.0*sqrt(10010.0)/286.0 * input; output[11 * increment] += 5.0*sqrt(455.0)/104.0 * input; break;
+            case 32: output[4 * increment] += -5.0*sqrt(5005.0)/286.0 * input; output[6 * increment] += -5.0*sqrt(15015.0)/286.0 * input; break;
+            case 33: output[7 * increment] += -21.0*sqrt(429.0)/286.0 * input; output[9 * increment] += -9.0*sqrt(2002.0)/286.0 * input; break;
+            case 34: output[6 * increment] += 2.0*sqrt(91.0)/13.0 * input; break;
+            case 35: output[7 * increment] += input; break;
+        }
     }
 };
 
@@ -316,7 +482,7 @@ class CartesianToSpherical<8, increment>
     };
 
 public:
-    static void apply(double* vector)
+    static void apply_inplace(double* vector)
     {
         const double spherical[17] {
             sqrt(429.0)/16.0 * vector[1 * increment] - 21.0*sqrt(5.0)/16.0 * vector[6 * increment] + 21.0*sqrt(5.0)/16.0 * vector[15 * increment] - sqrt(429.0)/16.0 * vector[28 * increment],
@@ -343,6 +509,58 @@ public:
 #pragma unroll
         for (int i = 17; i < 45; i++)
             vector[i * increment] = NAN;
+    }
+
+    static void scatter(const double input, const int i_input_cartesian, double* output)
+    {
+        switch (i_input_cartesian)
+        {
+            case  0: output[8 * increment] += 35.0/128.0 * input; output[10 * increment] += -3.0*sqrt(70.0)/64.0 * input; output[12 * increment] += 3.0*sqrt(77.0)/64.0 * input; output[14 * increment] += -sqrt(858.0)/64.0 * input; output[16 * increment] += 3.0*sqrt(715.0)/128.0 * input; break;
+            case  1: output[0 * increment] += sqrt(429.0)/16.0 * input; output[2 * increment] += -3.0*sqrt(1430.0)/160.0 * input; output[4 * increment] += sqrt(1155.0)/80.0 * input; output[6 * increment] += -sqrt(42.0)/32.0 * input; break;
+            case  2: output[9 * increment] += -7.0*sqrt(15.0)/32.0 * input; output[11 * increment] += 3.0*sqrt(77.0)/32.0 * input; output[13 * increment] += -sqrt(15015.0)/160.0 * input; output[15 * increment] += sqrt(429.0)/32.0 * input; break;
+            case  3: output[8 * increment] += 7.0*sqrt(65.0)/416.0 * input; output[10 * increment] += -3.0*sqrt(182.0)/416.0 * input; output[12 * increment] += -3.0*sqrt(5005.0)/1040.0 * input; output[14 * increment] += 7.0*sqrt(330.0)/160.0 * input; output[16 * increment] += -21.0*sqrt(11.0)/32.0 * input; break;
+            case  4: output[1 * increment] += 7.0*sqrt(33.0)/32.0 * input; output[3 * increment] += -sqrt(1155.0)/32.0 * input; output[5 * increment] += 9.0*sqrt(1001.0)/416.0 * input; output[7 * increment] += -7.0*sqrt(195.0)/416.0 * input; break;
+            case  5: output[8 * increment] += -7.0*sqrt(65.0)/52.0 * input; output[10 * increment] += 45.0*sqrt(182.0)/416.0 * input; output[12 * increment] += -9.0*sqrt(5005.0)/520.0 * input; output[14 * increment] += 7.0*sqrt(330.0)/160.0 * input; break;
+            case  6: output[0 * increment] += -21.0*sqrt(5.0)/16.0 * input; output[2 * increment] += 7.0*sqrt(6.0)/32.0 * input; output[4 * increment] += 3.0*sqrt(91.0)/208.0 * input; output[6 * increment] += -9.0*sqrt(10010.0)/4576.0 * input; break;
+            case  7: output[9 * increment] += -63.0*sqrt(715.0)/4576.0 * input; output[11 * increment] += -3.0*sqrt(273.0)/416.0 * input; output[13 * increment] += 27.0*sqrt(35.0)/160.0 * input; output[15 * increment] += -63.0/32.0 * input; break;
+            case  8: output[2 * increment] += 21.0*sqrt(30.0)/80.0 * input; output[4 * increment] += -9.0*sqrt(455.0)/130.0 * input; output[6 * increment] += 45.0*sqrt(2002.0)/2288.0 * input; break;
+            case  9: output[9 * increment] += 105.0*sqrt(143.0)/572.0 * input; output[11 * increment] += -5.0*sqrt(1365.0)/104.0 * input; output[13 * increment] += 3.0*sqrt(7.0)/8.0 * input; break;
+            case 10: output[8 * increment] += 35.0*sqrt(1001.0)/9152.0 * input; output[12 * increment] += -35.0*sqrt(13.0)/416.0 * input; output[16 * increment] += 35.0*sqrt(35.0)/64.0 * input; break;
+            case 11: output[1 * increment] += -35.0*sqrt(5.0)/32.0 * input; output[3 * increment] += 5.0*sqrt(7.0)/32.0 * input; output[5 * increment] += 5.0*sqrt(1365.0)/416.0 * input; output[7 * increment] += -105.0*sqrt(143.0)/4576.0 * input; break;
+            case 12: output[8 * increment] += -7.0*sqrt(2145.0)/572.0 * input; output[10 * increment] += 15.0*sqrt(6006.0)/4576.0 * input; output[12 * increment] += 3.0*sqrt(1365.0)/104.0 * input; output[14 * increment] += -21.0*sqrt(10.0)/32.0 * input; break;
+            case 13: output[3 * increment] += 5.0*sqrt(7.0)/8.0 * input; output[5 * increment] += -5.0*sqrt(1365.0)/104.0 * input; output[7 * increment] += 35.0*sqrt(143.0)/572.0 * input; break;
+            case 14: output[8 * increment] += 35.0*sqrt(1001.0)/572.0 * input; output[10 * increment] += -35.0*sqrt(1430.0)/572.0 * input; output[12 * increment] += 35.0*sqrt(13.0)/104.0 * input; break;
+            case 15: output[0 * increment] += 21.0*sqrt(5.0)/16.0 * input; output[2 * increment] += 7.0*sqrt(6.0)/32.0 * input; output[4 * increment] += -3.0*sqrt(91.0)/208.0 * input; output[6 * increment] += -9.0*sqrt(10010.0)/4576.0 * input; break;
+            case 16: output[9 * increment] += -105.0*sqrt(143.0)/4576.0 * input; output[11 * increment] += -5.0*sqrt(1365.0)/416.0 * input; output[13 * increment] += 5.0*sqrt(7.0)/32.0 * input; output[15 * increment] += 35.0*sqrt(5.0)/32.0 * input; break;
+            case 17: output[2 * increment] += -5.0*sqrt(14.0)/8.0 * input; output[6 * increment] += 15.0*sqrt(4290.0)/1144.0 * input; break;
+            case 18: output[9 * increment] += 5.0*sqrt(3003.0)/286.0 * input; output[11 * increment] += 5.0*sqrt(65.0)/52.0 * input; output[13 * increment] += -5.0*sqrt(3.0)/4.0 * input; break;
+            case 19: output[4 * increment] += 5.0*sqrt(91.0)/26.0 * input; output[6 * increment] += -5.0*sqrt(10010.0)/286.0 * input; break;
+            case 20: output[9 * increment] += -63.0*sqrt(143.0)/286.0 * input; output[11 * increment] += sqrt(1365.0)/26.0 * input; break;
+            case 21: output[8 * increment] += 7.0*sqrt(65.0)/416.0 * input; output[10 * increment] += 3.0*sqrt(182.0)/416.0 * input; output[12 * increment] += -3.0*sqrt(5005.0)/1040.0 * input; output[14 * increment] += -7.0*sqrt(330.0)/160.0 * input; output[16 * increment] += -21.0*sqrt(11.0)/32.0 * input; break;
+            case 22: output[1 * increment] += 63.0/32.0 * input; output[3 * increment] += 27.0*sqrt(35.0)/160.0 * input; output[5 * increment] += 3.0*sqrt(273.0)/416.0 * input; output[7 * increment] += -63.0*sqrt(715.0)/4576.0 * input; break;
+            case 23: output[8 * increment] += -7.0*sqrt(2145.0)/572.0 * input; output[10 * increment] += -15.0*sqrt(6006.0)/4576.0 * input; output[12 * increment] += 3.0*sqrt(1365.0)/104.0 * input; output[14 * increment] += 21.0*sqrt(10.0)/32.0 * input; break;
+            case 24: output[3 * increment] += -5.0*sqrt(3.0)/4.0 * input; output[5 * increment] += -5.0*sqrt(65.0)/52.0 * input; output[7 * increment] += 5.0*sqrt(3003.0)/286.0 * input; break;
+            case 25: output[8 * increment] += 7.0*sqrt(2145.0)/286.0 * input; output[12 * increment] += -3.0*sqrt(1365.0)/52.0 * input; break;
+            case 26: output[5 * increment] += 3.0*sqrt(273.0)/26.0 * input; output[7 * increment] += -63.0*sqrt(715.0)/1430.0 * input; break;
+            case 27: output[8 * increment] += -14.0*sqrt(65.0)/65.0 * input; output[10 * increment] += 3.0*sqrt(182.0)/26.0 * input; break;
+            case 28: output[0 * increment] += -sqrt(429.0)/16.0 * input; output[2 * increment] += -3.0*sqrt(1430.0)/160.0 * input; output[4 * increment] += -sqrt(1155.0)/80.0 * input; output[6 * increment] += -sqrt(42.0)/32.0 * input; break;
+            case 29: output[9 * increment] += -7.0*sqrt(195.0)/416.0 * input; output[11 * increment] += -9.0*sqrt(1001.0)/416.0 * input; output[13 * increment] += -sqrt(1155.0)/32.0 * input; output[15 * increment] += -7.0*sqrt(33.0)/32.0 * input; break;
+            case 30: output[2 * increment] += 21.0*sqrt(30.0)/80.0 * input; output[4 * increment] += 9.0*sqrt(455.0)/130.0 * input; output[6 * increment] += 45.0*sqrt(2002.0)/2288.0 * input; break;
+            case 31: output[9 * increment] += 35.0*sqrt(143.0)/572.0 * input; output[11 * increment] += 5.0*sqrt(1365.0)/104.0 * input; output[13 * increment] += 5.0*sqrt(7.0)/8.0 * input; break;
+            case 32: output[4 * increment] += -5.0*sqrt(91.0)/26.0 * input; output[6 * increment] += -5.0*sqrt(10010.0)/286.0 * input; break;
+            case 33: output[9 * increment] += -63.0*sqrt(715.0)/1430.0 * input; output[11 * increment] += -3.0*sqrt(273.0)/26.0 * input; break;
+            case 34: output[6 * increment] += sqrt(546.0)/13.0 * input; break;
+            case 35: output[9 * increment] += 2.0*sqrt(15.0)/5.0 * input; break;
+            case 36: output[8 * increment] += 35.0/128.0 * input; output[10 * increment] += 3.0*sqrt(70.0)/64.0 * input; output[12 * increment] += 3.0*sqrt(77.0)/64.0 * input; output[14 * increment] += sqrt(858.0)/64.0 * input; output[16 * increment] += 3.0*sqrt(715.0)/128.0 * input; break;
+            case 37: output[1 * increment] += -sqrt(429.0)/32.0 * input; output[3 * increment] += -sqrt(15015.0)/160.0 * input; output[5 * increment] += -3.0*sqrt(77.0)/32.0 * input; output[7 * increment] += -7.0*sqrt(15.0)/32.0 * input; break;
+            case 38: output[8 * increment] += -7.0*sqrt(65.0)/52.0 * input; output[10 * increment] += -45.0*sqrt(182.0)/416.0 * input; output[12 * increment] += -9.0*sqrt(5005.0)/520.0 * input; output[14 * increment] += -7.0*sqrt(330.0)/160.0 * input; break;
+            case 39: output[3 * increment] += 3.0*sqrt(7.0)/8.0 * input; output[5 * increment] += 5.0*sqrt(1365.0)/104.0 * input; output[7 * increment] += 105.0*sqrt(143.0)/572.0 * input; break;
+            case 40: output[8 * increment] += 35.0*sqrt(1001.0)/572.0 * input; output[10 * increment] += 35.0*sqrt(1430.0)/572.0 * input; output[12 * increment] += 35.0*sqrt(13.0)/104.0 * input; break;
+            case 41: output[5 * increment] += -sqrt(1365.0)/26.0 * input; output[7 * increment] += -63.0*sqrt(143.0)/286.0 * input; break;
+            case 42: output[8 * increment] += -14.0*sqrt(65.0)/65.0 * input; output[10 * increment] += -3.0*sqrt(182.0)/26.0 * input; break;
+            case 43: output[7 * increment] += 2.0*sqrt(15.0)/5.0 * input; break;
+            case 44: output[8 * increment] += input; break;
+        }
     }
 };
 
@@ -373,7 +591,7 @@ class CartesianToSpherical<9, increment>
     };
 
 public:
-    static void apply(double* vector)
+    static void apply_inplace(double* vector)
     {
         const double spherical[19] {
             9.0*sqrt(1430.0)/256.0 * vector[1 * increment] - 21.0*sqrt(110.0)/64.0 * vector[6 * increment] + 63.0*sqrt(70.0)/128.0 * vector[15 * increment] - 9.0*sqrt(286.0)/64.0 * vector[28 * increment] + sqrt(24310.0)/256.0 * vector[45 * increment],
@@ -403,22 +621,102 @@ public:
         for (int i = 19; i < 55; i++)
             vector[i * increment] = NAN;
     }
+
+    static void scatter(const double input, const int i_input_cartesian, double* output)
+    {
+        switch (i_input_cartesian)
+        {
+            case  0: output[10 * increment] += 21.0*sqrt(5.0)/128.0 * input; output[12 * increment] += -sqrt(2310.0)/128.0 * input; output[14 * increment] += 3.0*sqrt(286.0)/128.0 * input; output[16 * increment] += -3.0*sqrt(1430.0)/256.0 * input; output[18 * increment] += sqrt(24310.0)/256.0 * input; break;
+            case  1: output[0 * increment] += 9.0*sqrt(1430.0)/256.0 * input; output[2 * increment] += -21.0*sqrt(24310.0)/4352.0 * input; output[4 * increment] += 15.0*sqrt(4862.0)/2176.0 * input; output[6 * increment] += -3.0*sqrt(39270.0)/2176.0 * input; output[8 * increment] += 21.0*sqrt(85.0)/2176.0 * input; break;
+            case  2: output[9 * increment] += 315.0*sqrt(17.0)/2176.0 * input; output[11 * increment] += -21.0*sqrt(1870.0)/1088.0 * input; output[13 * increment] += 3.0*sqrt(85085.0)/1088.0 * input; output[15 * increment] += -3.0*sqrt(72930.0)/1088.0 * input; output[17 * increment] += 3.0*sqrt(715.0)/128.0 * input; break;
+            case  3: output[10 * increment] += 21.0*sqrt(17.0)/544.0 * input; output[14 * increment] += -3.0*sqrt(24310.0)/1360.0 * input; output[16 * increment] += 15.0*sqrt(4862.0)/1088.0 * input; output[18 * increment] += -9.0*sqrt(286.0)/64.0 * input; break;
+            case  4: output[1 * increment] += sqrt(429.0)/16.0 * input; output[3 * increment] += -9.0*sqrt(4862.0)/544.0 * input; output[5 * increment] += sqrt(51051.0)/272.0 * input; output[7 * increment] += -7.0*sqrt(1122.0)/544.0 * input; break;
+            case  5: output[10 * increment] += -105.0*sqrt(17.0)/272.0 * input; output[12 * increment] += 9.0*sqrt(7854.0)/544.0 * input; output[14 * increment] += -21.0*sqrt(24310.0)/2720.0 * input; output[16 * increment] += 3.0*sqrt(4862.0)/272.0 * input; break;
+            case  6: output[0 * increment] += -21.0*sqrt(110.0)/64.0 * input; output[2 * increment] += 21.0*sqrt(1870.0)/1088.0 * input; output[6 * increment] += -sqrt(510510.0)/3536.0 * input; output[8 * increment] += 21.0*sqrt(1105.0)/7072.0 * input; break;
+            case  7: output[9 * increment] += 63.0*sqrt(1105.0)/7072.0 * input; output[11 * increment] += -21.0*sqrt(4862.0)/7072.0 * input; output[13 * increment] += -3.0*sqrt(1309.0)/272.0 * input; output[15 * increment] += 21.0*sqrt(1122.0)/544.0 * input; output[17 * increment] += -21.0*sqrt(11.0)/32.0 * input; break;
+            case  8: output[2 * increment] += 21.0*sqrt(374.0)/272.0 * input; output[4 * increment] += -21.0*sqrt(1870.0)/544.0 * input; output[6 * increment] += 27.0*sqrt(102102.0)/7072.0 * input; output[8 * increment] += -105.0*sqrt(221.0)/3536.0 * input; break;
+            case  9: output[9 * increment] += -105.0*sqrt(221.0)/884.0 * input; output[11 * increment] += 105.0*sqrt(24310.0)/7072.0 * input; output[13 * increment] += -3.0*sqrt(6545.0)/136.0 * input; output[15 * increment] += 7.0*sqrt(5610.0)/544.0 * input; break;
+            case 10: output[10 * increment] += 63.0*sqrt(85085.0)/155584.0 * input; output[12 * increment] += 21.0*sqrt(6630.0)/14144.0 * input; output[14 * increment] += -21.0*sqrt(238.0)/1088.0 * input; output[16 * increment] += -21.0*sqrt(1190.0)/2176.0 * input; output[18 * increment] += 63.0*sqrt(70.0)/128.0 * input; break;
+            case 11: output[1 * increment] += -21.0*sqrt(5.0)/16.0 * input; output[3 * increment] += 21.0*sqrt(510.0)/544.0 * input; output[5 * increment] += 3.0*sqrt(595.0)/272.0 * input; output[7 * increment] += -63.0*sqrt(2210.0)/7072.0 * input; break;
+            case 12: output[10 * increment] += -315.0*sqrt(7293.0)/38896.0 * input; output[12 * increment] += -27.0*sqrt(3094.0)/7072.0 * input; output[14 * increment] += 189.0*sqrt(510.0)/2720.0 * input; output[16 * increment] += -63.0*sqrt(102.0)/272.0 * input; break;
+            case 13: output[3 * increment] += 21.0*sqrt(510.0)/272.0 * input; output[5 * increment] += -3.0*sqrt(595.0)/34.0 * input; output[7 * increment] += 105.0*sqrt(2210.0)/3536.0 * input; break;
+            case 14: output[10 * increment] += 105.0*sqrt(85085.0)/9724.0 * input; output[12 * increment] += -105.0*sqrt(6630.0)/3536.0 * input; output[14 * increment] += 21.0*sqrt(238.0)/272.0 * input; break;
+            case 15: output[0 * increment] += 63.0*sqrt(70.0)/128.0 * input; output[2 * increment] += 21.0*sqrt(1190.0)/2176.0 * input; output[4 * increment] += -21.0*sqrt(238.0)/1088.0 * input; output[6 * increment] += -21.0*sqrt(6630.0)/14144.0 * input; output[8 * increment] += 63.0*sqrt(85085.0)/155584.0 * input; break;
+            case 16: output[9 * increment] += 315.0*sqrt(17017.0)/155584.0 * input; output[13 * increment] += -35.0*sqrt(85.0)/544.0 * input; output[17 * increment] += 35.0*sqrt(35.0)/64.0 * input; break;
+            case 17: output[2 * increment] += -35.0*sqrt(510.0)/272.0 * input; output[4 * increment] += 35.0*sqrt(102.0)/544.0 * input; output[6 * increment] += 45.0*sqrt(15470.0)/7072.0 * input; output[8 * increment] += -105.0*sqrt(36465.0)/38896.0 * input; break;
+            case 18: output[9 * increment] += -105.0*sqrt(7293.0)/9724.0 * input; output[11 * increment] += 35.0*sqrt(6630.0)/7072.0 * input; output[13 * increment] += 5.0*sqrt(1785.0)/136.0 * input; output[15 * increment] += -105.0*sqrt(170.0)/544.0 * input; break;
+            case 19: output[4 * increment] += 35.0*sqrt(238.0)/272.0 * input; output[6 * increment] += -105.0*sqrt(6630.0)/3536.0 * input; output[8 * increment] += 35.0*sqrt(85085.0)/9724.0 * input; break;
+            case 20: output[9 * increment] += 189.0*sqrt(17017.0)/9724.0 * input; output[11 * increment] += -21.0*sqrt(15470.0)/884.0 * input; output[13 * increment] += 21.0*sqrt(85.0)/136.0 * input; break;
+            case 21: output[10 * increment] += 21.0*sqrt(1105.0)/7072.0 * input; output[12 * increment] += sqrt(510510.0)/3536.0 * input; output[16 * increment] += -21.0*sqrt(1870.0)/1088.0 * input; output[18 * increment] += -21.0*sqrt(110.0)/64.0 * input; break;
+            case 22: output[1 * increment] += 21.0*sqrt(5.0)/16.0 * input; output[3 * increment] += 21.0*sqrt(510.0)/544.0 * input; output[5 * increment] += -3.0*sqrt(595.0)/272.0 * input; output[7 * increment] += -63.0*sqrt(2210.0)/7072.0 * input; break;
+            case 23: output[10 * increment] += -105.0*sqrt(36465.0)/38896.0 * input; output[12 * increment] += -45.0*sqrt(15470.0)/7072.0 * input; output[14 * increment] += 35.0*sqrt(102.0)/544.0 * input; output[16 * increment] += 35.0*sqrt(510.0)/272.0 * input; break;
+            case 24: output[3 * increment] += -25.0*sqrt(238.0)/136.0 * input; output[7 * increment] += 25.0*sqrt(9282.0)/1768.0 * input; break;
+            case 25: output[10 * increment] += 35.0*sqrt(36465.0)/4862.0 * input; output[12 * increment] += 15.0*sqrt(15470.0)/1768.0 * input; output[14 * increment] += -35.0*sqrt(102.0)/136.0 * input; break;
+            case 26: output[5 * increment] += 3.0*sqrt(595.0)/34.0 * input; output[7 * increment] += -21.0*sqrt(2210.0)/442.0 * input; break;
+            case 27: output[10 * increment] += -21.0*sqrt(1105.0)/221.0 * input; output[12 * increment] += sqrt(510510.0)/442.0 * input; break;
+            case 28: output[0 * increment] += -9.0*sqrt(286.0)/64.0 * input; output[2 * increment] += -15.0*sqrt(4862.0)/1088.0 * input; output[4 * increment] += -3.0*sqrt(24310.0)/1360.0 * input; output[8 * increment] += 21.0*sqrt(17.0)/544.0 * input; break;
+            case 29: output[9 * increment] += 63.0*sqrt(1105.0)/7072.0 * input; output[11 * increment] += 21.0*sqrt(4862.0)/7072.0 * input; output[13 * increment] += -3.0*sqrt(1309.0)/272.0 * input; output[15 * increment] += -21.0*sqrt(1122.0)/544.0 * input; output[17 * increment] += -21.0*sqrt(11.0)/32.0 * input; break;
+            case 30: output[2 * increment] += 63.0*sqrt(102.0)/272.0 * input; output[4 * increment] += 189.0*sqrt(510.0)/2720.0 * input; output[6 * increment] += 27.0*sqrt(3094.0)/7072.0 * input; output[8 * increment] += -315.0*sqrt(7293.0)/38896.0 * input; break;
+            case 31: output[9 * increment] += -105.0*sqrt(7293.0)/9724.0 * input; output[11 * increment] += -35.0*sqrt(6630.0)/7072.0 * input; output[13 * increment] += 5.0*sqrt(1785.0)/136.0 * input; output[15 * increment] += 105.0*sqrt(170.0)/544.0 * input; break;
+            case 32: output[4 * increment] += -35.0*sqrt(102.0)/136.0 * input; output[6 * increment] += -15.0*sqrt(15470.0)/1768.0 * input; output[8 * increment] += 35.0*sqrt(36465.0)/4862.0 * input; break;
+            case 33: output[9 * increment] += 189.0*sqrt(36465.0)/24310.0 * input; output[13 * increment] += -9.0*sqrt(357.0)/68.0 * input; break;
+            case 34: output[6 * increment] += 3.0*sqrt(102102.0)/442.0 * input; output[8 * increment] += -21.0*sqrt(221.0)/221.0 * input; break;
+            case 35: output[9 * increment] += -18.0*sqrt(85.0)/85.0 * input; output[11 * increment] += 3.0*sqrt(374.0)/34.0 * input; break;
+            case 36: output[10 * increment] += 21.0*sqrt(85.0)/2176.0 * input; output[12 * increment] += 3.0*sqrt(39270.0)/2176.0 * input; output[14 * increment] += 15.0*sqrt(4862.0)/2176.0 * input; output[16 * increment] += 21.0*sqrt(24310.0)/4352.0 * input; output[18 * increment] += 9.0*sqrt(1430.0)/256.0 * input; break;
+            case 37: output[1 * increment] += -sqrt(429.0)/16.0 * input; output[3 * increment] += -9.0*sqrt(4862.0)/544.0 * input; output[5 * increment] += -sqrt(51051.0)/272.0 * input; output[7 * increment] += -7.0*sqrt(1122.0)/544.0 * input; break;
+            case 38: output[10 * increment] += -105.0*sqrt(221.0)/3536.0 * input; output[12 * increment] += -27.0*sqrt(102102.0)/7072.0 * input; output[14 * increment] += -21.0*sqrt(1870.0)/544.0 * input; output[16 * increment] += -21.0*sqrt(374.0)/272.0 * input; break;
+            case 39: output[3 * increment] += 21.0*sqrt(510.0)/272.0 * input; output[5 * increment] += 3.0*sqrt(595.0)/34.0 * input; output[7 * increment] += 105.0*sqrt(2210.0)/3536.0 * input; break;
+            case 40: output[10 * increment] += 35.0*sqrt(85085.0)/9724.0 * input; output[12 * increment] += 105.0*sqrt(6630.0)/3536.0 * input; output[14 * increment] += 35.0*sqrt(238.0)/272.0 * input; break;
+            case 41: output[5 * increment] += -3.0*sqrt(595.0)/34.0 * input; output[7 * increment] += -21.0*sqrt(2210.0)/442.0 * input; break;
+            case 42: output[10 * increment] += -21.0*sqrt(221.0)/221.0 * input; output[12 * increment] += -3.0*sqrt(102102.0)/442.0 * input; break;
+            case 43: output[7 * increment] += sqrt(1122.0)/17.0 * input; break;
+            case 44: output[10 * increment] += 3.0*sqrt(85.0)/17.0 * input; break;
+            case 45: output[0 * increment] += sqrt(24310.0)/256.0 * input; output[2 * increment] += 3.0*sqrt(1430.0)/256.0 * input; output[4 * increment] += 3.0*sqrt(286.0)/128.0 * input; output[6 * increment] += sqrt(2310.0)/128.0 * input; output[8 * increment] += 21.0*sqrt(5.0)/128.0 * input; break;
+            case 46: output[9 * increment] += 315.0*sqrt(17.0)/2176.0 * input; output[11 * increment] += 21.0*sqrt(1870.0)/1088.0 * input; output[13 * increment] += 3.0*sqrt(85085.0)/1088.0 * input; output[15 * increment] += 3.0*sqrt(72930.0)/1088.0 * input; output[17 * increment] += 3.0*sqrt(715.0)/128.0 * input; break;
+            case 47: output[2 * increment] += -3.0*sqrt(4862.0)/272.0 * input; output[4 * increment] += -21.0*sqrt(24310.0)/2720.0 * input; output[6 * increment] += -9.0*sqrt(7854.0)/544.0 * input; output[8 * increment] += -105.0*sqrt(17.0)/272.0 * input; break;
+            case 48: output[9 * increment] += -105.0*sqrt(221.0)/884.0 * input; output[11 * increment] += -105.0*sqrt(24310.0)/7072.0 * input; output[13 * increment] += -3.0*sqrt(6545.0)/136.0 * input; output[15 * increment] += -7.0*sqrt(5610.0)/544.0 * input; break;
+            case 49: output[4 * increment] += 21.0*sqrt(238.0)/272.0 * input; output[6 * increment] += 105.0*sqrt(6630.0)/3536.0 * input; output[8 * increment] += 105.0*sqrt(85085.0)/9724.0 * input; break;
+            case 50: output[9 * increment] += 189.0*sqrt(17017.0)/9724.0 * input; output[11 * increment] += 21.0*sqrt(15470.0)/884.0 * input; output[13 * increment] += 21.0*sqrt(85.0)/136.0 * input; break;
+            case 51: output[6 * increment] += -sqrt(510510.0)/442.0 * input; output[8 * increment] += -21.0*sqrt(1105.0)/221.0 * input; break;
+            case 52: output[9 * increment] += -18.0*sqrt(85.0)/85.0 * input; output[11 * increment] += -3.0*sqrt(374.0)/34.0 * input; break;
+            case 53: output[8 * increment] += 3.0*sqrt(85.0)/17.0 * input; break;
+            case 54: output[9 * increment] += input; break;
+        }
+    }
 };
 
 template<int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_AUX_L && j_L >= 0 && j_L <= MAX_AUX_L)
-static void cartesian_to_spherical_inplace(double matrix[CARTESIAN_ORBITAL_COUNT(i_L) * CARTESIAN_ORBITAL_COUNT(j_L)])
+static void cartesian_to_spherical_2d_inplace(double matrix[CARTESIAN_ORBITAL_COUNT(i_L) * CARTESIAN_ORBITAL_COUNT(j_L)])
 {
     constexpr int n_cartesian_i = CARTESIAN_ORBITAL_COUNT(i_L);
     constexpr int n_cartesian_j = CARTESIAN_ORBITAL_COUNT(j_L);
 #pragma unroll
     for (int i = 0; i < n_cartesian_i; i++)
     {
-        CartesianToSpherical<j_L, 1>::apply(matrix + i * n_cartesian_j);
+        CartesianToSpherical<j_L, 1>::apply_inplace(matrix + i * n_cartesian_j);
     }
     constexpr int n_spherical_j = j_L * 2 + 1;
 #pragma unroll
     for (int j = 0; j < n_spherical_j; j++)
     {
-        CartesianToSpherical<i_L, n_cartesian_j>::apply(matrix + j);
+        CartesianToSpherical<i_L, n_cartesian_j>::apply_inplace(matrix + j);
     }
+}
+
+template<int L> requires (L >= 0 && L <= MAX_AUX_L)
+static void cartesian_to_spherical_1d_inplace(double vector[CARTESIAN_ORBITAL_COUNT(L)])
+{
+    constexpr int n_cartesian = CARTESIAN_ORBITAL_COUNT(L);
+    CartesianToSpherical<L, 1>::apply_inplace(vector);
+}
+
+template<int L, int increment> requires (L >= 0 && L <= MAX_AUX_L)
+static void cartesian_to_spherical_1d_scatter(const double input, const int i_input_cartesian, double* output)
+{
+    if (i_input_cartesian < 0 || i_input_cartesian >= CARTESIAN_ORBITAL_COUNT(L))
+    {
+        output[0] = NAN;
+        return;
+    }
+    CartesianToSpherical<L, increment>::scatter(input, i_input_cartesian, output);
 }

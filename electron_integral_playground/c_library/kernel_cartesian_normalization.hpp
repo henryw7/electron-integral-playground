@@ -42,3 +42,23 @@ static void kernel_cartesian_normalize(double cartesian_matrix[CARTESIAN_ORBITAL
         }
     }
 }
+
+template<int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_AUX_L && j_L >= 0 && j_L <= MAX_AUX_L)
+static void kernel_cartesian_normalize(double cartesian_matrix[CARTESIAN_ORBITAL_COUNT(i_L) * CARTESIAN_ORBITAL_COUNT(j_L)],
+                                       const int i_begin, const int i_end)
+{
+    if constexpr (i_L <= 1 && j_L <= 1)
+        return;
+
+    constexpr int n_density_i = CARTESIAN_ORBITAL_COUNT(i_L);
+    constexpr int n_density_j = CARTESIAN_ORBITAL_COUNT(j_L);
+#pragma unroll
+    for (int i = i_begin; i < i_end; i++)
+    {
+#pragma unroll
+        for (int j = 0; j < n_density_j; j++)
+        {
+            cartesian_matrix[(i - i_begin) * n_density_j + j] *= kernel_cartesian_normalization_constants[i_L][i] * kernel_cartesian_normalization_constants[j_L][j];
+        }
+    }
+}

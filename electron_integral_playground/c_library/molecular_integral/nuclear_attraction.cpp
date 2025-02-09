@@ -145,7 +145,7 @@ static void nuclear_attraction_general_kernel_wrapper(const int i_pair,
     const int j_ao_start = pair_j_ao_start[i_pair];
     if (spherical)
     {
-        cartesian_to_spherical_inplace<i_L, j_L>(V_cartesian);
+        cartesian_to_spherical_2d_inplace<i_L, j_L>(V_cartesian);
         for (int i = 0; i < 2 * i_L + 1; i++)
         {
             for (int j = 0; j < 2 * j_L + 1; j++)
