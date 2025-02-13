@@ -50,7 +50,7 @@ static void two_center_general_kernel(const double A_a[4],
     // mcmurchie_davidson_form_E_i0_t_0AB<j_L>(one_over_two_q, E_k0_s);
 
     constexpr bool store_R_xyz_0 = triple_lower_triangular_total<i_L + j_L> <= MAX_REGISTER_MATRIX_DOUBLE_COUNT;
-    constexpr int R_xyz_t_size = store_R_xyz_0 ? triple_lower_triangular_total<i_L + j_L> : i_L + j_L + 1;
+    constexpr int R_xyz_t_size = store_R_xyz_0 ? triple_lower_triangular_total<i_L + j_L> : (i_L + j_L + 1);
     double R_xyz_t[R_xyz_t_size] {NAN};
     if constexpr (store_R_xyz_0)
     {
@@ -116,7 +116,7 @@ static void two_center_general_kernel(const double A_a[4],
         }
     }
 
-    kernel_cartesian_normalize<i_L, j_L>(J2c_cartesian, i_density_begin, i_density_end);
+    kernel_cartesian_normalize_2d<i_L, j_L>(J2c_cartesian, i_density_begin, i_density_end);
 }
 
 template <int i_L, int j_L>
@@ -172,9 +172,10 @@ static void two_center_general_kernel_wrapper(const int i_aux,
             }
             else
             {
+#pragma unroll
                 for (int i = i_density_begin; i < i_density_end; i++)
                 {
-                    cartesian_to_spherical_1d_inplace<j_L>(J2c_cartesian + ((i - i_density_begin) * n_density_j));
+                    cartesian_to_spherical_1d_inplace<j_L, 1>(J2c_cartesian + ((i - i_density_begin) * n_density_j));
                 }
                 for (int j = 0; j < 2 * j_L + 1; j++)
                 {
@@ -214,19 +215,19 @@ template <int i_L, int j_L>
 static void two_center_general_caller(const double* aux_A_a,
                                       const double* aux_i_coefficient,
                                       const int* aux_i_aux_start,
-                                      const int n_aux_i,
+                                      const int n_aux_primitive_i,
                                       const double* aux_B_b,
                                       const double* aux_j_coefficient,
                                       const int* aux_j_aux_start,
-                                      const int n_aux_j,
+                                      const int n_aux_primitive_j,
                                       double* J2c_matrix,
                                       const int n_aux,
                                       const bool spherical,
                                       const double omega)
 {
-    for (int i_aux = 0; i_aux < n_aux_i; i_aux++)
+    for (int i_aux = 0; i_aux < n_aux_primitive_i; i_aux++)
     {
-        for (int j_aux = 0; j_aux < n_aux_j; j_aux++)
+        for (int j_aux = 0; j_aux < n_aux_primitive_j; j_aux++)
         {
             two_center_general_kernel_wrapper<i_L, j_L>(i_aux, j_aux, aux_A_a, aux_i_coefficient, aux_i_aux_start, aux_B_b, aux_j_coefficient, aux_j_aux_start, J2c_matrix, n_aux, spherical, omega);
         }
@@ -240,11 +241,11 @@ extern "C"
                    const double* aux_A_a,
                    const double* aux_i_coefficient,
                    const int* aux_i_aux_start,
-                   const int n_aux_i,
+                   const int n_aux_primitive_i,
                    const double* aux_B_b,
                    const double* aux_j_coefficient,
                    const int* aux_j_aux_start,
-                   const int n_aux_j,
+                   const int n_aux_primitive_j,
                    double* J2c_matrix,
                    const int n_aux,
                    const bool spherical,
@@ -253,61 +254,61 @@ extern "C"
         const int ij_L = i_L * 100 + j_L;
         switch (ij_L)
         {
-            case   0: two_center_general_caller<0, 0>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case   1: two_center_general_caller<0, 1>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 101: two_center_general_caller<1, 1>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case   2: two_center_general_caller<0, 2>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 102: two_center_general_caller<1, 2>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 202: two_center_general_caller<2, 2>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case   3: two_center_general_caller<0, 3>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 103: two_center_general_caller<1, 3>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 203: two_center_general_caller<2, 3>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 303: two_center_general_caller<3, 3>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case   4: two_center_general_caller<0, 4>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 104: two_center_general_caller<1, 4>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 204: two_center_general_caller<2, 4>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 304: two_center_general_caller<3, 4>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 404: two_center_general_caller<4, 4>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case   5: two_center_general_caller<0, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 105: two_center_general_caller<1, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 205: two_center_general_caller<2, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 305: two_center_general_caller<3, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 405: two_center_general_caller<4, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 505: two_center_general_caller<5, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case   6: two_center_general_caller<0, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 106: two_center_general_caller<1, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 206: two_center_general_caller<2, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 306: two_center_general_caller<3, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 406: two_center_general_caller<4, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 506: two_center_general_caller<5, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 606: two_center_general_caller<6, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case   7: two_center_general_caller<0, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 107: two_center_general_caller<1, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 207: two_center_general_caller<2, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 307: two_center_general_caller<3, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 407: two_center_general_caller<4, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 507: two_center_general_caller<5, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 607: two_center_general_caller<6, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 707: two_center_general_caller<7, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case   8: two_center_general_caller<0, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 108: two_center_general_caller<1, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 208: two_center_general_caller<2, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 308: two_center_general_caller<3, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 408: two_center_general_caller<4, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 508: two_center_general_caller<5, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 608: two_center_general_caller<6, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 708: two_center_general_caller<7, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 808: two_center_general_caller<8, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case   9: two_center_general_caller<0, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 109: two_center_general_caller<1, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 209: two_center_general_caller<2, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 309: two_center_general_caller<3, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 409: two_center_general_caller<4, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 509: two_center_general_caller<5, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 609: two_center_general_caller<6, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 709: two_center_general_caller<7, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 809: two_center_general_caller<8, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
-            case 909: two_center_general_caller<9, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_j, J2c_matrix, n_aux, spherical, omega); break;
+            case   0: two_center_general_caller<0, 0>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case   1: two_center_general_caller<0, 1>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 101: two_center_general_caller<1, 1>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case   2: two_center_general_caller<0, 2>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 102: two_center_general_caller<1, 2>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 202: two_center_general_caller<2, 2>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case   3: two_center_general_caller<0, 3>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 103: two_center_general_caller<1, 3>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 203: two_center_general_caller<2, 3>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 303: two_center_general_caller<3, 3>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case   4: two_center_general_caller<0, 4>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 104: two_center_general_caller<1, 4>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 204: two_center_general_caller<2, 4>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 304: two_center_general_caller<3, 4>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 404: two_center_general_caller<4, 4>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case   5: two_center_general_caller<0, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 105: two_center_general_caller<1, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 205: two_center_general_caller<2, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 305: two_center_general_caller<3, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 405: two_center_general_caller<4, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 505: two_center_general_caller<5, 5>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case   6: two_center_general_caller<0, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 106: two_center_general_caller<1, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 206: two_center_general_caller<2, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 306: two_center_general_caller<3, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 406: two_center_general_caller<4, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 506: two_center_general_caller<5, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 606: two_center_general_caller<6, 6>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case   7: two_center_general_caller<0, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 107: two_center_general_caller<1, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 207: two_center_general_caller<2, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 307: two_center_general_caller<3, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 407: two_center_general_caller<4, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 507: two_center_general_caller<5, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 607: two_center_general_caller<6, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 707: two_center_general_caller<7, 7>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case   8: two_center_general_caller<0, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 108: two_center_general_caller<1, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 208: two_center_general_caller<2, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 308: two_center_general_caller<3, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 408: two_center_general_caller<4, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 508: two_center_general_caller<5, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 608: two_center_general_caller<6, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 708: two_center_general_caller<7, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 808: two_center_general_caller<8, 8>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case   9: two_center_general_caller<0, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 109: two_center_general_caller<1, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 209: two_center_general_caller<2, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 309: two_center_general_caller<3, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 409: two_center_general_caller<4, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 509: two_center_general_caller<5, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 609: two_center_general_caller<6, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 709: two_center_general_caller<7, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 809: two_center_general_caller<8, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
+            case 909: two_center_general_caller<9, 9>(aux_A_a, aux_i_coefficient, aux_i_aux_start, n_aux_primitive_i, aux_B_b, aux_j_coefficient, aux_j_aux_start, n_aux_primitive_j, J2c_matrix, n_aux, spherical, omega); break;
             default:
                 printf("%s function does not support angular i_L = %d, j_L = %d\n", __func__ , i_L, j_L);
                 fflush(stdout);

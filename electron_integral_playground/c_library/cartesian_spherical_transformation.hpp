@@ -703,11 +703,11 @@ static void cartesian_to_spherical_2d_inplace(double matrix[CARTESIAN_ORBITAL_CO
     }
 }
 
-template<int L> requires (L >= 0 && L <= MAX_AUX_L)
+template<int L, int increment> requires (L >= 0 && L <= MAX_AUX_L)
 static void cartesian_to_spherical_1d_inplace(double vector[CARTESIAN_ORBITAL_COUNT(L)])
 {
     constexpr int n_cartesian = CARTESIAN_ORBITAL_COUNT(L);
-    CartesianToSpherical<L, 1>::apply_inplace(vector);
+    CartesianToSpherical<L, increment>::apply_inplace(vector);
 }
 
 template<int L, int increment> requires (L >= 0 && L <= MAX_AUX_L)

@@ -75,7 +75,7 @@ static void overlap_general_kernel(const double A_a[4],
         }
     }
 
-    kernel_cartesian_normalize<i_L, j_L>(S_cartesian);
+    kernel_cartesian_normalize_2d<i_L, j_L>(S_cartesian);
 }
 
 template <int i_L, int j_L>

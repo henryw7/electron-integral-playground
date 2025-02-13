@@ -25,7 +25,7 @@ static const double kernel_cartesian_normalization_constants[MAX_AUX_L + 1][CART
     $$\sqrt{ \frac{i_x! i_y! i_z!}{(2i_x)! (2i_y)! (2i_z)!} \frac{(2L)!}{L!} }$$
 */
 template<int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_AUX_L && j_L >= 0 && j_L <= MAX_AUX_L)
-static void kernel_cartesian_normalize(double cartesian_matrix[CARTESIAN_ORBITAL_COUNT(i_L) * CARTESIAN_ORBITAL_COUNT(j_L)])
+static void kernel_cartesian_normalize_2d(double cartesian_matrix[CARTESIAN_ORBITAL_COUNT(i_L) * CARTESIAN_ORBITAL_COUNT(j_L)])
 {
     if constexpr (i_L <= 1 && j_L <= 1)
         return;
@@ -44,8 +44,8 @@ static void kernel_cartesian_normalize(double cartesian_matrix[CARTESIAN_ORBITAL
 }
 
 template<int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_AUX_L && j_L >= 0 && j_L <= MAX_AUX_L)
-static void kernel_cartesian_normalize(double cartesian_matrix[CARTESIAN_ORBITAL_COUNT(i_L) * CARTESIAN_ORBITAL_COUNT(j_L)],
-                                       const int i_begin, const int i_end)
+static void kernel_cartesian_normalize_2d(double cartesian_matrix[CARTESIAN_ORBITAL_COUNT(i_L) * CARTESIAN_ORBITAL_COUNT(j_L)],
+                                          const int i_begin, const int i_end)
 {
     if constexpr (i_L <= 1 && j_L <= 1)
         return;
@@ -60,5 +60,20 @@ static void kernel_cartesian_normalize(double cartesian_matrix[CARTESIAN_ORBITAL
         {
             cartesian_matrix[(i - i_begin) * n_density_j + j] *= kernel_cartesian_normalization_constants[i_L][i] * kernel_cartesian_normalization_constants[j_L][j];
         }
+    }
+}
+
+template<int i_L, int increment> requires (i_L >= 0 && i_L <= MAX_AUX_L)
+static void kernel_cartesian_normalize_1d(double* cartesian_matrix,
+                                          const int i_begin, const int i_end)
+{
+    if constexpr (i_L <= 1)
+        return;
+
+    constexpr int n_density_i = CARTESIAN_ORBITAL_COUNT(i_L);
+#pragma unroll
+    for (int i = i_begin; i < i_end; i++)
+    {
+        cartesian_matrix[(i - i_begin) * increment] *= kernel_cartesian_normalization_constants[i_L][i];
     }
 }

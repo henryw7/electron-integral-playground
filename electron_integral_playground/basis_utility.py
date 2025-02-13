@@ -26,7 +26,7 @@ def attach_basis_to_molecule(molecule: Molecule, basis_set: BasisSet, if_auxilia
     for element in molecule.elements:
         assert element in basis_set
         if element not in basis_set_actually_used:
-            basis_set_actually_used[element] = basis_set[element]
+            basis_set_actually_used[element] = deepcopy(basis_set[element])
 
     for element in basis_set_actually_used:
         for basis in basis_set_actually_used[element]:

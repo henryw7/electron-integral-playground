@@ -110,7 +110,7 @@ static void nuclear_attraction_general_kernel(const double P_p[4],
         }
     }
 
-    kernel_cartesian_normalize<i_L, j_L>(V_cartesian);
+    kernel_cartesian_normalize_2d<i_L, j_L>(V_cartesian);
 }
 
 template <int i_L, int j_L>
