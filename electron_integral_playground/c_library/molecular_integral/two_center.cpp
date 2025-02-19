@@ -69,10 +69,10 @@ static void two_center_general_kernel(const double A_a[4],
         const int i_y = cartesian_orbital_index_y<i_L>(i_density);
         const int i_z = cartesian_orbital_index_z<i_L>(i_density);
 
-#pragma unroll
+#pragma GCC ivdep
         for (int j_x = j_L; j_x >= 0; j_x--)
         {
-#pragma unroll
+#pragma GCC ivdep
             for (int j_y = j_L - j_x; j_y >= 0; j_y--)
             {
                 const int j_z = j_L - j_x - j_y;
@@ -172,7 +172,7 @@ static void two_center_general_kernel_wrapper(const int i_aux,
             }
             else
             {
-#pragma unroll
+#pragma GCC ivdep
                 for (int i = i_density_begin; i < i_density_end; i++)
                 {
                     cartesian_to_spherical_1d_inplace<j_L, 1>(J2c_cartesian + ((i - i_density_begin) * n_density_j));

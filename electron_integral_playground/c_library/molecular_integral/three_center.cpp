@@ -73,6 +73,9 @@ static void three_center_general_kernel(const double P_p[4],
         mcmurchie_davidson_E_i0_t_to_E_ij_t<i_L, j_L>(ABz, E_z_i0_t, E_z_ij_t);
     }
 
+    double E_k0_s[lower_triangular_even_total<k_L>] {NAN};
+    mcmurchie_davidson_form_E_i0_t_0AB<k_L>(one_over_two_q, E_k0_s);
+
     constexpr bool store_R_xyz_0 = triple_lower_triangular_total<i_L + j_L + k_L> <= MAX_REGISTER_MATRIX_DOUBLE_COUNT;
     constexpr int R_xyz_t_size = store_R_xyz_0 ? triple_lower_triangular_total<i_L + j_L + k_L> : (i_L + j_L + k_L + 1);
     double R_xyz_t[R_xyz_t_size] {NAN};
@@ -93,19 +96,19 @@ static void three_center_general_kernel(const double P_p[4],
         const int k_y = cartesian_orbital_index_y<k_L>(k_density);
         const int k_z = cartesian_orbital_index_z<k_L>(k_density);
 
-#pragma unroll
+#pragma GCC ivdep
         for (int i_x = i_L; i_x >= 0; i_x--)
         {
-#pragma unroll
+#pragma GCC ivdep
             for (int i_y = i_L - i_x; i_y >= 0; i_y--)
             {
                 const int i_z = i_L - i_x - i_y;
                 const int i_density = cartesian_orbital_index<i_L>(i_x, i_y);
 
-#pragma unroll
+#pragma GCC ivdep
                 for (int j_x = j_L; j_x >= 0; j_x--)
                 {
-#pragma unroll
+#pragma GCC ivdep
                     for (int j_y = j_L - j_x; j_y >= 0; j_y--)
                     {
                         const int j_z = j_L - j_x - j_y;
@@ -114,29 +117,33 @@ static void three_center_general_kernel(const double P_p[4],
                         double J3c_ijk_xyz = 0.0;
                         for (int t_x = 0; t_x <= i_x + j_x; t_x++)
                         {
+                            const double E_ijt_x = E_x_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i_x, j_x, t_x)];
                             for (int t_y = 0; t_y <= i_y + j_y; t_y++)
                             {
+                                const double E_ijt_y = E_y_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i_y, j_y, t_y)];
+                                const double E_ijt_xy = E_ijt_x * E_ijt_y;
                                 for (int t_z = 0; t_z <= i_z + j_z; t_z++)
                                 {
+                                    const double E_ijt_z = E_z_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i_z, j_z, t_z)];
+                                    const double E_ijt_xyz = E_ijt_xy * E_ijt_z;
                                     for (int s_x = k_x % 2; s_x <= k_x; s_x += 2)
                                     {
+                                        const double E_k0s_x = E_k0_s[lower_triangular_even_index(k_x, s_x)];
                                         for (int s_y = k_y % 2; s_y <= k_y; s_y += 2)
                                         {
+                                            const double E_k0s_y = E_k0_s[lower_triangular_even_index(k_y, s_y)];
+                                            const double E_k0s_xy = E_k0s_x * E_k0s_y;
                                             for (int s_z = k_z % 2; s_z <= k_z; s_z += 2)
                                             {
+                                                const double E_k0s_z = E_k0_s[lower_triangular_even_index(k_z, s_z)];
+                                                const double E_k0s_xyz = E_k0s_xy * E_k0s_z;
+
                                                 double R_xyz_0 = NAN;
                                                 if constexpr (store_R_xyz_0)
                                                     R_xyz_0 = R_xyz_t[triple_lower_triangular_index<i_L + j_L + k_L>(t_x + s_x, t_y + s_y, t_z + s_z)];
                                                 else
                                                     R_xyz_0 = mcmurchie_davidson_R_000_m_to_R_xyz_0<i_L + j_L + k_L>(PQx, PQy, PQz, R_xyz_t, t_x + s_x, t_y + s_y, t_z + s_z);
-                                                J3c_ijk_xyz += ((s_x + s_y + s_z) % 2 == 0 ? 1 : -1)
-                                                               * E_x_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i_x, j_x, t_x)]
-                                                               * E_y_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i_y, j_y, t_y)]
-                                                               * E_z_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i_z, j_z, t_z)]
-                                                               * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, k_x, s_x)
-                                                               * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, k_y, s_y)
-                                                               * mcmurchie_davidson_compute_E_i0_t_0AB(one_over_two_q, k_z, s_z)
-                                                               * R_xyz_0;
+                                                J3c_ijk_xyz += ((s_x + s_y + s_z) % 2 == 0 ? 1 : -1) * E_ijt_xyz * E_k0s_xyz * R_xyz_0;
                                             }
                                         }
                                     }
@@ -153,12 +160,12 @@ static void three_center_general_kernel(const double P_p[4],
     }
 
     constexpr int n_density_ij = cartesian_orbital_total<i_L> * cartesian_orbital_total<j_L>;
-#pragma unroll
+#pragma GCC ivdep
     for (int k_density = k_density_begin; k_density < k_density_end; k_density++)
     {
         kernel_cartesian_normalize_2d<i_L, j_L>(J3c_cartesian + (k_density - k_density_begin) * n_density_ij);
     }
-#pragma unroll
+#pragma GCC ivdep
     for (int ij = 0; ij < n_density_ij; ij++)
     {
         kernel_cartesian_normalize_1d<k_L, n_density_ij>(J3c_cartesian + ij, k_density_begin, k_density_end);
@@ -209,7 +216,7 @@ static void three_center_general_kernel_wrapper(const int i_pair_ij,
         if (spherical)
         {
             constexpr int n_density_ij = n_density_i * n_density_j;
-#pragma unroll
+#pragma GCC ivdep
             for (int k = k_density_begin; k < k_density_end; k++)
             {
                 cartesian_to_spherical_2d_inplace<i_L, j_L>(J3c_cartesian + (k - k_density_begin) * n_density_ij);
@@ -217,10 +224,10 @@ static void three_center_general_kernel_wrapper(const int i_pair_ij,
 
             if constexpr (n_density_k_split == 1)
             {
-#pragma unroll
+#pragma GCC ivdep
                 for (int i = 0; i < 2 * i_L + 1; i++)
                 {
-#pragma unroll
+#pragma GCC ivdep
                     for (int j = 0; j < 2 * j_L + 1; j++)
                     {
                         cartesian_to_spherical_1d_inplace<k_L, n_density_ij>(J3c_cartesian + (i * n_density_j + j));

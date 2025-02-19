@@ -49,19 +49,19 @@ static void overlap_general_kernel(const double A_a[4],
         mcmurchie_davidson_E_i0_0_to_E_ij_0<i_L, j_L>(ABz, E_z_i0_t, E_z_ij_0);
     }
 
-#pragma unroll
+#pragma GCC ivdep
     for (int i_x = i_L; i_x >= 0; i_x--)
     {
-#pragma unroll
+#pragma GCC ivdep
         for (int i_y = i_L - i_x; i_y >= 0; i_y--)
         {
             const int i_z = i_L - i_x - i_y;
             const int i_density = cartesian_orbital_index<i_L>(i_x, i_y);
 
-#pragma unroll
+#pragma GCC ivdep
             for (int j_x = j_L; j_x >= 0; j_x--)
             {
-#pragma unroll
+#pragma GCC ivdep
                 for (int j_y = j_L - j_x; j_y >= 0; j_y--)
                 {
                     const int j_z = j_L - j_x - j_y;

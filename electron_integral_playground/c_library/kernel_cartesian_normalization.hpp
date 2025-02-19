@@ -32,10 +32,10 @@ static void kernel_cartesian_normalize_2d(double cartesian_matrix[CARTESIAN_ORBI
 
     constexpr int n_density_i = CARTESIAN_ORBITAL_COUNT(i_L);
     constexpr int n_density_j = CARTESIAN_ORBITAL_COUNT(j_L);
-#pragma unroll
+#pragma GCC ivdep
     for (int i = 0; i < n_density_i; i++)
     {
-#pragma unroll
+#pragma GCC ivdep
         for (int j = 0; j < n_density_j; j++)
         {
             cartesian_matrix[i * n_density_j + j] *= kernel_cartesian_normalization_constants[i_L][i] * kernel_cartesian_normalization_constants[j_L][j];
@@ -50,12 +50,11 @@ static void kernel_cartesian_normalize_2d(double cartesian_matrix[CARTESIAN_ORBI
     if constexpr (i_L <= 1 && j_L <= 1)
         return;
 
-    constexpr int n_density_i = CARTESIAN_ORBITAL_COUNT(i_L);
     constexpr int n_density_j = CARTESIAN_ORBITAL_COUNT(j_L);
-#pragma unroll
+#pragma GCC ivdep
     for (int i = i_begin; i < i_end; i++)
     {
-#pragma unroll
+#pragma GCC ivdep
         for (int j = 0; j < n_density_j; j++)
         {
             cartesian_matrix[(i - i_begin) * n_density_j + j] *= kernel_cartesian_normalization_constants[i_L][i] * kernel_cartesian_normalization_constants[j_L][j];
@@ -70,8 +69,7 @@ static void kernel_cartesian_normalize_1d(double* cartesian_matrix,
     if constexpr (i_L <= 1)
         return;
 
-    constexpr int n_density_i = CARTESIAN_ORBITAL_COUNT(i_L);
-#pragma unroll
+#pragma GCC ivdep
     for (int i = i_begin; i < i_end; i++)
     {
         cartesian_matrix[(i - i_begin) * increment] *= kernel_cartesian_normalization_constants[i_L][i];

@@ -104,7 +104,7 @@ static void boys_function_evaluate(const double x, double y[L + 1])
 {
     if (x < 1e-16)
     {
-#pragma unroll
+#pragma GCC ivdep
         for (int m = 0; m <= L; m++)
             y[m] = boys_taylor_prefactor[m][0];
     }
@@ -115,7 +115,7 @@ static void boys_function_evaluate(const double x, double y[L + 1])
         x_power[0] = x;
         for (int k = 1; k < BOYS_TAYLOR_ORDER; k++)
             x_power[k] = x_power[k - 1] * x;
-#pragma unroll
+#pragma GCC ivdep
         for (int m = 0; m <= L; m++)
         {
             double y_taylor = boys_taylor_prefactor[m][0];
@@ -135,7 +135,7 @@ static void boys_function_evaluate(const double x, double y[L + 1])
         const double x_minus_x0 = x - (boys_spline_x0_start + i_interval * boys_spline_x_interval);
         const double x_minus_x0_2 = x_minus_x0 * x_minus_x0;
         const double x_minus_x0_3 = x_minus_x0_2 * x_minus_x0;
-#pragma unroll
+#pragma GCC ivdep
         for (int m = 0; m <= L; m++)
         {
             const double spline_C0 = boys_cubic_spline_coefficient[m][i_interval * 4 + 0];
@@ -164,7 +164,7 @@ static void boys_function_evaluate(const double x, double y[L + 1])
     else
     {
         // max relative error at L = 26, x = 80.0 is 2.2e-12
-#pragma unroll
+#pragma GCC ivdep
         for (int m = 0; m <= L; m++)
         {
             y[m] = boys_infinity_prefactor[m] * pow(x, -m - 0.5);

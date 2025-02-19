@@ -39,13 +39,13 @@ static void mcmurchie_davidson_form_R_000_m(const double zeta, const double PQ_2
 template <int L, int m_base = 0> requires (L >= 0 && m_base >= 0)
 static void mcmurchie_davidson_R_000_m_to_R_xyz_0(const double PQx, const double PQy, const double PQz, const double R_000_m[L + 1], double R_xyz_0[triple_lower_triangular_total<L>])
 {
-#pragma unroll
+#pragma GCC ivdep
     for (int t_x = 0; t_x <= L; t_x++)
     {
-#pragma unroll
+#pragma GCC ivdep
         for (int t_y = 0; t_x + t_y <= L; t_y++)
         {
-#pragma unroll
+#pragma GCC ivdep
             for (int t_z = 0; t_x + t_y + t_z <= L; t_z++)
             {
                 double R_tx_ty_tz_0 = 0.0;

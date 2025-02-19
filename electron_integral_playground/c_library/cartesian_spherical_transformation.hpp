@@ -179,10 +179,10 @@ public:
             sqrt(5.0/8.0) * vector[2 * increment] - sqrt(9.0/8.0) * vector[7 * increment],
             sqrt(35.0/64.0) * (vector[0 * increment] + vector[10 * increment]) - sqrt(27.0/16.0) * vector[3 * increment],
         };
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 0; i < 9; i++)
             vector[i * increment] = spherical[i];
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 9; i < 15; i++)
             vector[i * increment] = NAN;
     }
@@ -244,10 +244,10 @@ public:
             sqrt(35.0/64.0) * (vector[2 * increment] + vector[16 * increment]) - sqrt(27.0/16.0) * vector[7 * increment],
             sqrt(63.0/128.0) * vector[0 * increment] - sqrt(75.0/32.0) * vector[3 * increment] + sqrt(175.0/128.0) * vector[10 * increment],
         };
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 0; i < 11; i++)
             vector[i * increment] = spherical[i];
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 11; i < 21; i++)
             vector[i * increment] = NAN;
     }
@@ -319,10 +319,10 @@ public:
             sqrt(63.0/128.0) * vector[2 * increment] - sqrt(75.0/32.0) * vector[7 * increment] + sqrt(175.0/128.0) * vector[16 * increment],
             sqrt(231.0/512.0) * (vector[0 * increment] - vector[21 * increment]) + sqrt(1575.0/512.0) * (-vector[3 * increment] + vector[10 * increment]),
         };
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 0; i < 13; i++)
             vector[i * increment] = spherical[i];
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 13; i < 28; i++)
             vector[i * increment] = NAN;
     }
@@ -405,10 +405,10 @@ public:
             sqrt(462.0)/32.0 * vector[2 * increment] - 15.0*sqrt(14.0)/32.0 * vector[7 * increment] + 15.0*sqrt(14.0)/32.0 * vector[16 * increment] - sqrt(462.0)/32.0 * vector[29 * increment],
             sqrt(429.0)/32.0 * vector[0 * increment] - 63.0/32.0 * vector[3 * increment] + 35.0*sqrt(5.0)/32.0 * vector[10 * increment] - 7.0*sqrt(33.0)/32.0 * vector[21 * increment],
         };
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 0; i < 15; i++)
             vector[i * increment] = spherical[i];
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 15; i < 36; i++)
             vector[i * increment] = NAN;
     }
@@ -503,10 +503,10 @@ public:
             sqrt(429.0)/32.0 * vector[2 * increment] - 63.0/32.0 * vector[7 * increment] + 35.0*sqrt(5.0)/32.0 * vector[16 * increment] - 7.0*sqrt(33.0)/32.0 * vector[29 * increment],
             3.0*sqrt(715.0)/128.0 * vector[0 * increment] - 21.0*sqrt(11.0)/32.0 * vector[3 * increment] + 35.0*sqrt(35.0)/64.0 * vector[10 * increment] - 21.0*sqrt(11.0)/32.0 * vector[21 * increment] + 3.0*sqrt(715.0)/128.0 * vector[36 * increment],
         };
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 0; i < 17; i++)
             vector[i * increment] = spherical[i];
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 17; i < 45; i++)
             vector[i * increment] = NAN;
     }
@@ -614,10 +614,10 @@ public:
             3.0*sqrt(715.0)/128.0 * vector[2 * increment] - 21.0*sqrt(11.0)/32.0 * vector[7 * increment] + 35.0*sqrt(35.0)/64.0 * vector[16 * increment] - 21.0*sqrt(11.0)/32.0 * vector[29 * increment] + 3.0*sqrt(715.0)/128.0 * vector[46 * increment],
             sqrt(24310.0)/256.0 * vector[0 * increment] - 9.0*sqrt(286.0)/64.0 * vector[3 * increment] + 63.0*sqrt(70.0)/128.0 * vector[10 * increment] - 21.0*sqrt(110.0)/64.0 * vector[21 * increment] + 9.0*sqrt(1430.0)/256.0 * vector[36 * increment],
         };
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 0; i < 19; i++)
             vector[i * increment] = spherical[i];
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 19; i < 55; i++)
             vector[i * increment] = NAN;
     }
@@ -690,13 +690,13 @@ static void cartesian_to_spherical_2d_inplace(double matrix[CARTESIAN_ORBITAL_CO
 {
     constexpr int n_cartesian_i = CARTESIAN_ORBITAL_COUNT(i_L);
     constexpr int n_cartesian_j = CARTESIAN_ORBITAL_COUNT(j_L);
-#pragma unroll
+#pragma GCC ivdep
     for (int i = 0; i < n_cartesian_i; i++)
     {
         CartesianToSpherical<j_L, 1>::apply_inplace(matrix + i * n_cartesian_j);
     }
     constexpr int n_spherical_j = j_L * 2 + 1;
-#pragma unroll
+#pragma GCC ivdep
     for (int j = 0; j < n_spherical_j; j++)
     {
         CartesianToSpherical<i_L, n_cartesian_j>::apply_inplace(matrix + j);
@@ -706,7 +706,6 @@ static void cartesian_to_spherical_2d_inplace(double matrix[CARTESIAN_ORBITAL_CO
 template<int L, int increment> requires (L >= 0 && L <= MAX_AUX_L)
 static void cartesian_to_spherical_1d_inplace(double vector[CARTESIAN_ORBITAL_COUNT(L)])
 {
-    constexpr int n_cartesian = CARTESIAN_ORBITAL_COUNT(L);
     CartesianToSpherical<L, increment>::apply_inplace(vector);
 }
 

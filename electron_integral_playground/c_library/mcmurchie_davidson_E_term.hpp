@@ -32,7 +32,7 @@ static void mcmurchie_davidson_form_E_i0_t(const double PA, const double one_ove
     for (int i = 2; i <= L; i++)
     {
         E_i0_t[lower_triangular_index(i, 0)] = PA * E_i0_t[lower_triangular_index(i - 1, 0)] + E_i0_t[lower_triangular_index(i - 1, 1)];
-#pragma unroll
+#pragma GCC ivdep
         for (int t = 1; t < i - 1; t++)
         {
             E_i0_t[lower_triangular_index(i, t)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, t - 1)]
@@ -62,7 +62,7 @@ static void mcmurchie_davidson_form_E_i0_0(const double PA, const double one_ove
     for (int i = 2; i <= L / 2; i++)
     {
         E_i0_t[lower_triangular_index(i, 0)] = PA * E_i0_t[lower_triangular_index(i - 1, 0)] + E_i0_t[lower_triangular_index(i - 1, 1)];
-#pragma unroll
+#pragma GCC ivdep
         for (int t = 1; t < i - 1; t++)
         {
             E_i0_t[lower_triangular_index(i, t)] = one_over_two_p * E_i0_t[lower_triangular_index(i - 1, t - 1)]
@@ -78,7 +78,7 @@ static void mcmurchie_davidson_form_E_i0_0(const double PA, const double one_ove
         E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i, 0)] = PA * E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i - 1, 0)]
                                                                         + E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i - 1, 1)];
         const int remove_last_element = (L % 2 == 1 && i == L / 2 + 1) ? 1 : 0;
-#pragma unroll
+#pragma GCC ivdep
         for (int t = 1; t <= L - i - remove_last_element; t++)
         {
             E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i, t)] = one_over_two_p * E_i0_t[lower_triangular_upper_anti_triangular_index<L>(i - 1, t - 1)]
@@ -119,7 +119,7 @@ static void mcmurchie_davidson_form_E_i0_t_0AB(const double one_over_two_p, doub
     {
         if (i % 2 == 0)
             E_i0_t[lower_triangular_even_index(i, 0)] = E_i0_t[lower_triangular_even_index(i - 1, 1)];
-#pragma unroll
+#pragma GCC ivdep
         for (int t = (i % 2 == 0) ? 2 : 1; t < i; t += 2)
         {
             E_i0_t[lower_triangular_even_index(i, t)] = one_over_two_p * E_i0_t[lower_triangular_even_index(i - 1, t - 1)]
@@ -166,23 +166,23 @@ static double mcmurchie_davidson_compute_E_i0_t_0AB(const double one_over_two_p,
 template <int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_L && j_L >= 0 && j_L <= MAX_L)
 static void mcmurchie_davidson_E_i0_t_to_E_ij_t(const double AB, const double E_i0_t[lower_triangular_total<i_L + j_L>], double E_ij_t[mcmurchie_davidson_E_ijt_total<i_L, j_L>])
 {
-#pragma unroll
+#pragma GCC ivdep
     for (int i = 0; i <= i_L; i++)
     {
-#pragma unroll
+#pragma GCC ivdep
         for (int t = 0; t <= i; t++)
         {
             E_ij_t[mcmurchie_davidson_E_ijt_index<j_L>(i, 0, t)] = E_i0_t[lower_triangular_index(i, t)];
         }
     }
 
-#pragma unroll
+#pragma GCC ivdep
     for (int j = 1; j <= j_L; j++)
     {
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 0; i <= i_L; i++)
         {
-#pragma unroll
+#pragma GCC ivdep
             for (int t = 0; t <= i + j; t++)
             {
                 double AB_power_j_minus_m = 1.0;
@@ -205,16 +205,16 @@ static void mcmurchie_davidson_E_i0_t_to_E_ij_t(const double AB, const double E_
 template <int i_L, int j_L> requires (i_L >= 0 && i_L <= MAX_L && j_L >= 0 && j_L <= MAX_L)
 static void mcmurchie_davidson_E_i0_0_to_E_ij_0(const double AB, const double E_i0_t[lower_triangular_upper_anti_triangular_total<i_L + j_L>], double E_ij_0[(i_L + 1) * (j_L + 1)])
 {
-#pragma unroll
+#pragma GCC ivdep
     for (int i = 0; i <= i_L; i++)
     {
         E_ij_0[i * (j_L + 1) + 0] = E_i0_t[lower_triangular_upper_anti_triangular_index<i_L + j_L>(i, 0)];
     }
 
-#pragma unroll
+#pragma GCC ivdep
     for (int j = 1; j <= j_L; j++)
     {
-#pragma unroll
+#pragma GCC ivdep
         for (int i = 0; i <= i_L; i++)
         {
             double AB_power_j_minus_m = 1.0;
