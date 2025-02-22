@@ -306,6 +306,7 @@ static void three_center_general_caller(const double* pair_P_p,
                                         const bool spherical,
                                         const double omega)
 {
+#pragma omp parallel for collapse(2)
     for (int i_pair_ij = 0; i_pair_ij < n_pair_ij; i_pair_ij++)
     {
         for (int i_aux_k = 0; i_aux_k < n_aux_primitive_k; i_aux_k++)

@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
-project(electron-integral-playground C CXX CUDA)
+project(electron-integral-playground C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
+
+find_package(OpenMP REQUIRED)
 
 add_compile_options(-Wall -Wno-unused-function -O3 -fPIC)
 

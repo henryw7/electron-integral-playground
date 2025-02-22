@@ -8,4 +8,5 @@ add_library(molecular_integral SHARED
 
 target_link_libraries(molecular_integral
     integral_utility
+    OpenMP::OpenMP_CXX
 )
