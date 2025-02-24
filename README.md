@@ -5,7 +5,7 @@ This package is not intended for performance or industry-level stability. If you
 
 Instead, this package is intended for readability. We document all the equations we're using into the code. We reveal all the code generator scripts. We want every new quantum chemistry or computer science students to understand our code, and be able to easily grab the pieces they need.
 
-Of course, we're making all efforts to make sure the result correct.
+Of course, we're making all efforts to make sure the results are correct. And although it's not our top priority, we adopt principals of high-performance computing, and design our code in a way that can be easily turned into a CPU multi thread/GPU accelerated program.
 
 Compilation
 --------
