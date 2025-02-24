@@ -18,7 +18,7 @@ if __name__ == "__main__":
         prefactor = boys_infinity_asymptotic_prefactor(m)
         print(f"{prefactor.numerator}.0/{prefactor.denominator}.0*sqrt(M_PI),")
 
-    taylor_order = 8
+    taylor_order = 10
     print("Asymptotic to zero:")
     for m in range(L_max + 1):
         print("{ ", end = "")

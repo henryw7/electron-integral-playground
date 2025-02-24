@@ -2,7 +2,7 @@
 #pragma once
 
 #include "angular.h"
-#include "boys_function_spline_parameter.h"
+#include "boys_function_interpolate_parameter.h"
 
 #include <math.h>
 
@@ -69,7 +69,7 @@ static const double boys_taylor_prefactor[MAX_BOYS_ORDER + 1][BOYS_TAYLOR_ORDER 
 };
 
 /*
-    The following implementation of Boys function $F_m(x)$ guarantees that the max relative error is approximately $10^{-12}$.
+    The following implementation of Boys function $F_m(x)$ guarantees that the max relative error is approximately $5 \times 10^{-14}$.
 
     The reference value is obtained according to the incomplete gamma function implementation of Boys function:
     $$F_m(x) = \frac{1}{2} \Gamma\left(m + \frac{1}{2}\right) \frac{1}{x^{m + 1/2}} \gamma\left(m + \frac{1}{2}, x\right)$$
@@ -85,19 +85,19 @@ static const double boys_taylor_prefactor[MAX_BOYS_ORDER + 1][BOYS_TAYLOR_ORDER 
 
     If $x \rightarrow 0$, the Taylor expansion of $F_m(x)$ at $x = 0$ is used:
     $$F_m(x) = \sum_{k=0}^\infty \frac{(-1)^k}{k!(2m+2k+1)} x^k$$
-    In practice, an 8-th order Taylor expansion provides $10^{-12}$ relative error for $F_{26}(x)$ at about $x \leq 0.2$.
+    In practice, an 8-th order Taylor expansion provides $5 \times 10^{-14}$ relative error for $F_{26}(x)$ at about $x \leq 0.1$.
 
     If $x \rightarrow \infty$, the asymptotic approximation of $F_m(x)$ is used:
     $$F_0(x) \approx \frac{1}{2} \sqrt{\frac{\pi}{x}}$$
     $$F_m(x) \approx \frac{(2m-1)!!}{2^{m+1}} \sqrt{\frac{\pi}{x^{2m+1}}} \quad (m \geq 1)$$
-    In practice, this asymptotic approximation provides $10^{-12}$ relative error for $F_{26}(x)$ at about $x \geq 80$.
+    In practice, this asymptotic approximation provides $5 \times 10^{-14}$ relative error for $F_{26}(x)$ at about $x \geq 85$.
 
     For the middle range of $F_m(x)$, the upward recursion is applied:
     $$F_0(x) = \frac{1}{2} \sqrt{\frac{\pi}{x}}erf(\sqrt{x})$$
     $$F_{m+1}(x) = \frac{(2m+1)F_m(x) - e^{-x}}{2x}$$
-    In practice, the upward recursion is numerically unstable for small value of $x$, and provides $10^{-12}$ relative error for $F_{26}(x)$ only at about $x \geq 15$.
+    In practice, the upward recursion is numerically unstable for small value of $x$, and provides $5 \times 10^{-14}$ relative error for $F_{26}(x)$ only at about $x \geq 18$.
 
-    For $0.2 \leq x \leq 15$, a cubic spline is used for every order ($m$) of $F_m(x)$. The interval of each spline is $5 \times 10^{-3}$ to ensure $10^{-12}$ relative error for $F_{26}(x)$.
+    For $0.1 \leq x \leq 18$, a Chebyshev interpolation is used for every order ($m$) of $F_m(x)$. The interval of each spline is $0.1$ to ensure $5 \times 10^{-14}$ relative error for $F_{26}(x)$.
 */
 template<int L> requires (L >= 0 && L <= MAX_BOYS_ORDER)
 static void boys_function_evaluate(const double x, double y[L + 1])
@@ -108,46 +108,49 @@ static void boys_function_evaluate(const double x, double y[L + 1])
         for (int m = 0; m <= L; m++)
             y[m] = boys_taylor_prefactor[m][0];
     }
-    else if (x < 0.2)
+    else if (x < 0.1)
     {
-        // max relative error at L = 26, x = 1.0 is 1.2e-12
-        double x_power[BOYS_TAYLOR_ORDER];
-        x_power[0] = x;
-        for (int k = 1; k < BOYS_TAYLOR_ORDER; k++)
+        // Max relative error at L = 24, x = 0.01 is 4.4e-14.
+        // A larger error is observed for x < 0.01, but I believe it's a problem of the reference value from scipy.
+        double x_power[BOYS_TAYLOR_ORDER + 1];
+        x_power[0] = 1.0;
+        for (int k = 1; k <= BOYS_TAYLOR_ORDER; k++)
             x_power[k] = x_power[k - 1] * x;
 #pragma GCC ivdep
         for (int m = 0; m <= L; m++)
         {
             double y_taylor = boys_taylor_prefactor[m][0];
-            double x_power = x;
-            for (int k = 0; k < BOYS_TAYLOR_ORDER; k++)
+            for (int k = 1; k <= BOYS_TAYLOR_ORDER; k++)
             {
-                y_taylor += boys_taylor_prefactor[m][k + 1] * x_power;
-                x_power *= x;
+                y_taylor += boys_taylor_prefactor[m][k] * x_power[k];
             }
             y[m] = y_taylor;
         }
     }
-    else if (x < 15.0)
+    else if (x < 18.0)
     {
-        // max relative error at L = 26, 0.2 <= x <= 15.0 is 1.3e-12
-        const int i_interval = (int) floor((x - boys_spline_x0_start) * one_over_boys_spline_x_interval);
-        const double x_minus_x0 = x - (boys_spline_x0_start + i_interval * boys_spline_x_interval);
-        const double x_minus_x0_2 = x_minus_x0 * x_minus_x0;
-        const double x_minus_x0_3 = x_minus_x0_2 * x_minus_x0;
+        // Max relative error at L = 26, 0.1 <= x <= 18.0 is 3.2e-14.
+        const int i_interval = (int) floor((x - boys_chebyshev_x0) * one_over_boys_chebyshev_x_interval);
+        const double x_minus_x0 = x - (boys_chebyshev_x0 + i_interval * boys_chebyshev_x_interval);
+        const double x_in_chebyshev_window = x_minus_x0 * one_over_boys_chebyshev_x_interval * 2.0 - 1.0;
+        double x_power[BOYS_CHEBYSHEV_POLYNOMIAL_ORDER + 1];
+        x_power[0] = 1.0;
+        for (int k = 1; k <= BOYS_CHEBYSHEV_POLYNOMIAL_ORDER; k++)
+            x_power[k] = x_power[k - 1] * x_in_chebyshev_window;
 #pragma GCC ivdep
         for (int m = 0; m <= L; m++)
         {
-            const double spline_C0 = boys_cubic_spline_coefficient[m][i_interval * 4 + 0];
-            const double spline_C1 = boys_cubic_spline_coefficient[m][i_interval * 4 + 1];
-            const double spline_C2 = boys_cubic_spline_coefficient[m][i_interval * 4 + 2];
-            const double spline_C3 = boys_cubic_spline_coefficient[m][i_interval * 4 + 3];
-            y[m] = spline_C0 + spline_C1 * x_minus_x0 + spline_C2 * x_minus_x0_2 + spline_C3 * x_minus_x0_3;
+            double y_chebyshev = boys_chebyshev_coefficient[m][i_interval][0];
+            for (int k = 1; k <= BOYS_CHEBYSHEV_POLYNOMIAL_ORDER; k++)
+            {
+                y_chebyshev += boys_chebyshev_coefficient[m][i_interval][k] * x_power[k];
+            }
+            y[m] = y_chebyshev;
         }
     }
-    else if (x < 80.0)
+    else if (x < 85.0)
     {
-        // max relative error at L = 26, x = 15.0 is 8.8e-13
+        // Max relative error at L = 26, x = 18.0 is 4.4e-14.
         const double sqrt_x = sqrt(x);
         double boys_m = boys_infinity_prefactor[0] * erf(sqrt_x) / sqrt_x;
         y[0] = boys_m;
@@ -163,7 +166,7 @@ static void boys_function_evaluate(const double x, double y[L + 1])
     }
     else
     {
-        // max relative error at L = 26, x = 80.0 is 2.2e-12
+        // max relative error at L = 26, x = 85.0 is 3.5e-14
 #pragma GCC ivdep
         for (int m = 0; m <= L; m++)
         {

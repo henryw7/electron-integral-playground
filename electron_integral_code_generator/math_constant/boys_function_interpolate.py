@@ -65,7 +65,11 @@ def boys_chebyshev_interpolate(x_start: float, x_end: float, chebyshev_order: in
         return reference_boys(x, boys_order)
     chebyshev_object = Chebyshev.interpolate(chebyshev_input, chebyshev_order)
     polynomial_object = chebyshev_object.convert(kind = Polynomial)
-    return polynomial_object.coef
+    coefficient = polynomial_object.coef
+    if coefficient.shape != (chebyshev_order + 1,):
+        pad_dimension = chebyshev_order + 1 - coefficient.shape[0]
+        coefficient = np.pad(coefficient, (0, pad_dimension), 'constant', constant_values = (0,0))
+    return coefficient
 
 def boys_chebyshev_evaluate(x: np.ndarray, polynomial_coefficients: np.ndarray, x_start: float, x_end: float) -> np.ndarray:
     chebyshev_order = polynomial_coefficients.shape[0] - 1
@@ -76,8 +80,9 @@ def boys_chebyshev_evaluate(x: np.ndarray, polynomial_coefficients: np.ndarray, 
     return y
 
 def get_chebyshev_coefficients(Lmax):
-    x_start = 0
-    x_end = 20.0
+    x_check_start = 0.1
+    x_start = 0.0
+    x_end = 18.0
     x_interval = 1.0
     x_interval_tight = 1e-5
     n_interval = int(np.round((x_end - x_start) / x_interval))
@@ -85,16 +90,17 @@ def get_chebyshev_coefficients(Lmax):
 
     print(f"coefficient size = {n_interval} * {chebyshev_order + 1} * {Lmax + 1}")
 
-    # coefficient_file = open("chebyshev_coefficent.txt", "w")
+    coefficient_file = open("chebyshev_coefficent.txt", "w")
 
     for boys_order in range(0, Lmax + 1, 1):
         polynomial_coefficients = np.empty((n_interval, chebyshev_order + 1))
         for i_interval in range(n_interval):
             polynomial_coefficients[i_interval, :] = boys_chebyshev_interpolate(x_start + i_interval * x_interval, x_start + (i_interval + 1) * x_interval, chebyshev_order, boys_order)
 
-        x_dense = np.arange(x_start, x_end + x_interval_tight, x_interval_tight)
+        x_dense = np.arange(x_check_start, x_end, x_interval_tight)
         y_exact = reference_boys(x_dense, boys_order)
-        y_exact[0] = 1 / (2.0 * boys_order + 1)
+        if x_check_start == 0.0:
+            y_exact[0] = 1 / (2.0 * boys_order + 1)
 
         y_approximate = np.zeros_like(x_dense)
         for i_interval in range(n_interval):
@@ -103,17 +109,17 @@ def get_chebyshev_coefficients(Lmax):
         max_relative_error = np.max(np.abs((y_approximate - y_exact) / y_exact))
 
         print(max_relative_error)
-    #     coefficient_text = "{ "
-    #     for i in range(interpolate_coefficient.shape[1]):
-    #         for j in range(interpolate_coefficient.shape[0]):
-    #             coefficient_text += f"{interpolate_coefficient[j, i]:.16e}, "
-    #         if (i % 2 == 1):
-    #             coefficient_text += "\n  "
-    #     coefficient_text += "},\n"
+        coefficient_text = "    {\n"
+        for i in range(n_interval):
+            coefficient_text += "        { "
+            for j in range(chebyshev_order + 1):
+                coefficient_text += f"{polynomial_coefficients[i, j]:.16e}, "
+            coefficient_text += "},\n"
+        coefficient_text += "    },\n"
 
-    #     coefficient_file.write(coefficient_text)
+        coefficient_file.write(coefficient_text)
 
-    # coefficient_file.close()
+    coefficient_file.close()
 
 if __name__ == "__main__":
     Lmax = 26
