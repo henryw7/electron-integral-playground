@@ -1,4 +1,12 @@
 
+Overview
+--------
+This package is not intended for performance or industry-level stability. If you're looking for industry standard for quantum chemistry calculation, consider Gaussian. If you want top performance, consider Q-Chem for best CPU performance, and GPU4PySCF or TeraChem for best GPU performance. If you want free, open-source reference, consider PySCF and GPU4PySCF.
+
+Instead, this package is intended for readability. We document all the equations we're using into the code. We reveal all the code generator scripts. We want every new quantum chemistry or computer science students to understand our code, and be able to easily grab the pieces they need.
+
+Of course, we're making all efforts to make sure the result correct.
+
 Compilation
 --------
 ```sh
