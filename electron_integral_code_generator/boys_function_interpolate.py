@@ -40,7 +40,7 @@ def get_cublic_spline_coefficients(Lmax):
 
     for order in range(0, Lmax + 1, 1):
         interpolate_coefficient = boys_cubic_spline_interpolate(x_start, x_end, x_interval, order)
-        
+
         x_dense = np.arange(x_start, x_end + x_interval_tight, x_interval_tight)
         y_approximate = boys_cubic_spline_evaluate(x_dense, interpolate_coefficient, x_start, x_interval)
         y_exact = reference_boys(x_dense, order)
