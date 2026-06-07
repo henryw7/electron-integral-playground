@@ -14,6 +14,7 @@ mkdir build;
 cd build;
 cmake ..;
 make -j 32;
+cd ..;
 ```
 
 Set environment variables
@@ -22,3 +23,10 @@ Set environment variables
 export PYTHONPATH=$PWD:$PYTHONPATH;
 export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH;
 ```
+
+Test
+--------
+```sh
+pytest electron_integral_playground/;
+```
+
