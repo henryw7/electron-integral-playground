@@ -48,7 +48,7 @@ def reference_rys_quadrature_roots(x: float, m: int) -> tuple[np.ndarray, np.nda
 def compute_and_save_reference(Lmax):
     Nroot_max = Lmax // 2 + 1
 
-    x = np.arange(1, 2, 0.0001)
+    x = np.arange(1, 2, 0.0001) # TODO
     # x = np.arange(0, 60, 0.0001)
     n_point = x.shape[0]
     print(f"n_point = {n_point}")
@@ -111,18 +111,21 @@ def boys_chebyshev_evaluate(x: np.ndarray, polynomial_coefficients: np.ndarray, 
 if __name__ == "__main__":
     Lmax = 26
     Nroot_max = Lmax // 2 + 1
+
+    raise NotImplementedError("The rys quadrature precision is very bad with scipy. Need to replace it with mpmath")
+
     # compute_and_save_reference(Lmax)
 
-    x_range = [1,1.1]
-    coefficient = chebyshev_interpolate(x_range[0], x_range[1], 5, Nroot_max)
-    reference_rys_x = np.load("reference_rys_x.npy")
-    reference_rys_y = np.load("reference_rys_y.npy")
-    x_where = (reference_rys_x >= x_range[0]) & (reference_rys_x <= x_range[1])
+    # x_range = [1,1.1]
+    # coefficient = chebyshev_interpolate(x_range[0], x_range[1], 5, Nroot_max)
+    # reference_rys_x = np.load("reference_rys_x.npy")
+    # reference_rys_y = np.load("reference_rys_y.npy")
+    # x_where = (reference_rys_x >= x_range[0]) & (reference_rys_x <= x_range[1])
 
-    chebyshev_y = boys_chebyshev_evaluate(reference_rys_x[x_where], coefficient, x_range[0], x_range[1])
-    reference_y = reference_rys_y[:, :, :, x_where]
-    print(np.max(np.abs((chebyshev_y[1, 13, 13, :] - reference_y[1, 13, 13, :]) / reference_y[1, 13, 13, :])))
+    # chebyshev_y = boys_chebyshev_evaluate(reference_rys_x[x_where], coefficient, x_range[0], x_range[1])
+    # reference_y = reference_rys_y[:, :, :, x_where]
+    # print(np.max(np.abs((chebyshev_y[1, 13, 13, :] - reference_y[1, 13, 13, :]) / reference_y[1, 13, 13, :])))
 
-    # np.set_printoptions(linewidth = np.iinfo(np.int32).max, threshold = np.iinfo(np.int32).max, precision = 16, suppress = True)
-    # print(f"test = np.{repr(chebyshev_y[1, 13, 13, :])}")
-    # print(f"ref  = np.{repr(reference_y[1, 13, 13, :])}")
+    # # np.set_printoptions(linewidth = np.iinfo(np.int32).max, threshold = np.iinfo(np.int32).max, precision = 16, suppress = True)
+    # # print(f"test = np.{repr(chebyshev_y[1, 13, 13, :])}")
+    # # print(f"ref  = np.{repr(reference_y[1, 13, 13, :])}")
