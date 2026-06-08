@@ -45,3 +45,22 @@ class PrimitivePairData:
     j_atom: np.ndarray
 
 type PrimitivePairDataAngularList = map[tuple[int, int], PrimitivePairData]
+
+@dataclass
+class Cell:
+    dimension: int
+    lattice_vectors: np.ndarray # Bohr, where each row (each 3 continuous values in a 3D lattice) stores a vector
+
+@dataclass
+class Crystal:
+    cell: Cell
+    atoms: Molecule # geometry field stores the absolute geometry of an arbitrary image of each atom
+
+@dataclass
+class PeriodicPrimitivePair:
+    i_shell: int
+    j_shell: int
+    i_primitive: int
+    j_primitive: int
+    cell_offset: np.ndarray # of 3 integers in a 3D lattice
+    upper_bound: float
