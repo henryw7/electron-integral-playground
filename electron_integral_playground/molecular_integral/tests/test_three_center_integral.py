@@ -94,7 +94,7 @@ def test_two_center_all_angular_spherical_h2():
 
     ref_J3c = np.load(reference_directory / 'reference_three_center_all_angular_spherical_h2_data.npz')["J3c"]
 
-    np.testing.assert_allclose(test_J3c, ref_J3c, atol = pyscf_bohr_integral_threshold)
+    np.testing.assert_allclose(test_J3c, ref_J3c, rtol = 0, atol = pyscf_bohr_integral_threshold)
 
 def test_two_center_all_angular_cartesian_h2():
     molecule = read_xyz_content(
@@ -173,7 +173,7 @@ def test_two_center_all_angular_cartesian_h2():
 
     ref_J3c = np.load(reference_directory / 'reference_three_center_all_angular_cartesian_h2_data.npz')["J3c"]
 
-    np.testing.assert_allclose(test_J3c, ref_J3c, atol = pyscf_bohr_integral_threshold)
+    np.testing.assert_allclose(test_J3c, ref_J3c, rtol = 0, atol = pyscf_bohr_integral_threshold)
 
 # def test_two_center_hof():
 #     molecule = read_xyz_content(
@@ -191,7 +191,7 @@ def test_two_center_all_angular_cartesian_h2():
 
 #     ref_J2c = np.loadtxt(reference_directory / 'reference_two_center_hof_data.txt')
 
-#     np.testing.assert_allclose(test_J2c, ref_J2c, atol = pyscf_angstrom_integral_threshold)
+#     np.testing.assert_allclose(test_J2c, ref_J2c, rtol = 0, atol = pyscf_angstrom_integral_threshold)
 
 # def test_two_center_hof_distorted():
 #     molecule = read_xyz_content(
@@ -209,7 +209,7 @@ def test_two_center_all_angular_cartesian_h2():
 
 #     ref_J2c = np.loadtxt(reference_directory / 'reference_two_center_hof_distorted_data.txt')
 
-#     np.testing.assert_allclose(test_J2c, ref_J2c, atol = pyscf_angstrom_integral_threshold)
+#     np.testing.assert_allclose(test_J2c, ref_J2c, rtol = 0, atol = pyscf_angstrom_integral_threshold)
 
 # def test_two_center_all_angular_spherical_h2_omega():
 #     molecule = read_xyz_content(
@@ -262,7 +262,7 @@ def test_two_center_all_angular_cartesian_h2():
 
 #     ref_J2c = np.loadtxt(reference_directory / 'reference_two_center_all_angular_spherical_h2_omega_data.txt')
 
-#     np.testing.assert_allclose(test_J2c, ref_J2c, atol = pyscf_bohr_integral_threshold)
+#     np.testing.assert_allclose(test_J2c, ref_J2c, rtol = 0, atol = pyscf_bohr_integral_threshold)
 
 # def test_two_center_all_angular_cartesian_h2_omega():
 #     molecule = read_xyz_content(
@@ -315,7 +315,7 @@ def test_two_center_all_angular_cartesian_h2():
 
 #     ref_J2c = np.loadtxt(reference_directory / 'reference_two_center_all_angular_cartesian_h2_omega_data.txt')
 
-#     np.testing.assert_allclose(test_J2c, ref_J2c, atol = pyscf_bohr_integral_threshold)
+#     np.testing.assert_allclose(test_J2c, ref_J2c, rtol = 0, atol = pyscf_bohr_integral_threshold)
 
 # def test_two_center_hof_omega():
 #     molecule = read_xyz_content(
@@ -334,7 +334,7 @@ def test_two_center_all_angular_cartesian_h2():
 
 #     ref_J2c = np.loadtxt(reference_directory / 'reference_two_center_hof_omega_data.txt')
 
-#     np.testing.assert_allclose(test_J2c, ref_J2c, atol = pyscf_angstrom_integral_threshold)
+#     np.testing.assert_allclose(test_J2c, ref_J2c, rtol = 0, atol = pyscf_angstrom_integral_threshold)
 
 # def test_two_center_hof_distorted_omega():
 #     molecule = read_xyz_content(
@@ -353,4 +353,4 @@ def test_two_center_all_angular_cartesian_h2():
 
 #     ref_J2c = np.loadtxt(reference_directory / 'reference_two_center_hof_distorted_omega_data.txt')
 
-#     np.testing.assert_allclose(test_J2c, ref_J2c, atol = pyscf_angstrom_integral_threshold)
+#     np.testing.assert_allclose(test_J2c, ref_J2c, rtol = 0, atol = pyscf_angstrom_integral_threshold)

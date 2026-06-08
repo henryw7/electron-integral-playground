@@ -20,7 +20,7 @@ def test_read_xyz_file():
                                    [ 0.0000, -0.7375, -0.0528],
                                    [ 0.8190,  0.8170,  0.4220],
                                    [-0.8190, -0.8170,  0.4220],]) * angstrom_to_bohr
-    np.testing.assert_allclose(molecule.geometry, reference_geometry, atol = xyz_read_threshold)
+    np.testing.assert_allclose(molecule.geometry, reference_geometry, rtol = 0, atol = xyz_read_threshold)
 
 def test_read_xyz_content():
     xyz = """3
@@ -37,4 +37,4 @@ def test_read_xyz_content():
     reference_geometry = np.array([[   0,   0,   1, ],
                                    [ 1.2,   0,   1, ],
                                    [-0.8, 0.2,   1, ],]) * angstrom_to_bohr
-    np.testing.assert_allclose(molecule.geometry, reference_geometry, atol = xyz_read_threshold)
+    np.testing.assert_allclose(molecule.geometry, reference_geometry, rtol = 0, atol = xyz_read_threshold)

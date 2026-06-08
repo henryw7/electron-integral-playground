@@ -22,4 +22,4 @@ def test_read_xyz_content():
     reference_geometry = np.array([[   0,   0,   1, ],
                                    [ 1.2,   0,   1, ],
                                    [-0.8, 0.2,   1, ],]) * angstrom_to_bohr
-    np.testing.assert_allclose(molecule.geometry, reference_geometry, atol = xyz_read_threshold)
+    np.testing.assert_allclose(molecule.geometry, reference_geometry, rtol = 0, atol = xyz_read_threshold)

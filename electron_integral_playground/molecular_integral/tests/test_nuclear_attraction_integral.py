@@ -14,7 +14,7 @@ import pathlib
 current_directory = pathlib.Path(__file__).parent.resolve()
 reference_directory = current_directory / "reference_nuclear_attraction"
 
-pyscf_bohr_integral_threshold = 1e-14
+pyscf_bohr_integral_threshold = 1e-12
 pyscf_angstrom_integral_threshold = 1e-9
 
 def test_nuclear_attraction_all_angular_spherical_h2():
@@ -75,7 +75,7 @@ def test_nuclear_attraction_all_angular_spherical_h2():
     ref_V = np.loadtxt(reference_directory / 'reference_nuclear_attraction_all_angular_spherical_h2_data.txt')
     ref_V = ref_V.reshape(test_V.shape)
 
-    np.testing.assert_allclose(test_V, ref_V, atol = pyscf_bohr_integral_threshold)
+    np.testing.assert_allclose(test_V, ref_V, rtol = 0, atol = pyscf_bohr_integral_threshold)
 
 def test_nuclear_attraction_all_angular_cartesian_h2():
     molecule = read_xyz_content(
@@ -135,7 +135,7 @@ def test_nuclear_attraction_all_angular_cartesian_h2():
     ref_V = np.loadtxt(reference_directory / 'reference_nuclear_attraction_all_angular_cartesian_h2_data.txt')
     ref_V = ref_V.reshape(test_V.shape)
 
-    np.testing.assert_allclose(test_V, ref_V, atol = pyscf_bohr_integral_threshold)
+    np.testing.assert_allclose(test_V, ref_V, rtol = 0, atol = pyscf_bohr_integral_threshold)
 
 def test_nuclear_attraction_hof():
     molecule = read_xyz_content(
@@ -155,7 +155,7 @@ def test_nuclear_attraction_hof():
     ref_V = np.loadtxt(reference_directory / 'reference_nuclear_attraction_hof_data.txt')
     ref_V = ref_V.reshape(test_V.shape)
 
-    np.testing.assert_allclose(test_V, ref_V, atol = pyscf_angstrom_integral_threshold)
+    np.testing.assert_allclose(test_V, ref_V, rtol = 0, atol = pyscf_angstrom_integral_threshold)
 
 def test_nuclear_attraction_hof_distorted():
     molecule = read_xyz_content(
@@ -175,7 +175,7 @@ def test_nuclear_attraction_hof_distorted():
     ref_V = np.loadtxt(reference_directory / 'reference_nuclear_attraction_hof_distorted_data.txt')
     ref_V = ref_V.reshape(test_V.shape)
 
-    np.testing.assert_allclose(test_V, ref_V, atol = pyscf_angstrom_integral_threshold)
+    np.testing.assert_allclose(test_V, ref_V, rtol = 0, atol = pyscf_angstrom_integral_threshold)
 
 def test_nuclear_attraction_all_angular_spherical_h2_omega():
     molecule = read_xyz_content(
@@ -236,7 +236,7 @@ def test_nuclear_attraction_all_angular_spherical_h2_omega():
     ref_V = np.loadtxt(reference_directory / 'reference_nuclear_attraction_all_angular_spherical_h2_omega_data.txt')
     ref_V = ref_V.reshape(test_V.shape)
 
-    np.testing.assert_allclose(test_V, ref_V, atol = pyscf_bohr_integral_threshold)
+    np.testing.assert_allclose(test_V, ref_V, rtol = 0, atol = pyscf_bohr_integral_threshold)
 
 def test_nuclear_attraction_all_angular_cartesian_h2_omega():
     molecule = read_xyz_content(
@@ -297,7 +297,7 @@ def test_nuclear_attraction_all_angular_cartesian_h2_omega():
     ref_V = np.loadtxt(reference_directory / 'reference_nuclear_attraction_all_angular_cartesian_h2_omega_data.txt')
     ref_V = ref_V.reshape(test_V.shape)
 
-    np.testing.assert_allclose(test_V, ref_V, atol = pyscf_bohr_integral_threshold)
+    np.testing.assert_allclose(test_V, ref_V, rtol = 0, atol = pyscf_bohr_integral_threshold)
 
 def test_nuclear_attraction_hof_omega():
     molecule = read_xyz_content(
@@ -318,7 +318,7 @@ def test_nuclear_attraction_hof_omega():
     ref_V = np.loadtxt(reference_directory / 'reference_nuclear_attraction_hof_omega_data.txt')
     ref_V = ref_V.reshape(test_V.shape)
 
-    np.testing.assert_allclose(test_V, ref_V, atol = pyscf_angstrom_integral_threshold)
+    np.testing.assert_allclose(test_V, ref_V, rtol = 0, atol = pyscf_angstrom_integral_threshold)
 
 def test_nuclear_attraction_hof_distorted_omega():
     molecule = read_xyz_content(
@@ -339,4 +339,4 @@ def test_nuclear_attraction_hof_distorted_omega():
     ref_V = np.loadtxt(reference_directory / 'reference_nuclear_attraction_hof_distorted_omega_data.txt')
     ref_V = ref_V.reshape(test_V.shape)
 
-    np.testing.assert_allclose(test_V, ref_V, atol = pyscf_angstrom_integral_threshold)
+    np.testing.assert_allclose(test_V, ref_V, rtol = 0, atol = pyscf_angstrom_integral_threshold)

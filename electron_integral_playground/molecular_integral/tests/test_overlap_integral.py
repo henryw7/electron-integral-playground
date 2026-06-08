@@ -14,8 +14,8 @@ import pathlib
 current_directory = pathlib.Path(__file__).parent.resolve()
 reference_directory = current_directory / "reference_overlap"
 
-pyscf_bohr_integral_threshold = 1e-14
-pyscf_angstrom_integral_threshold = 1e-10
+pyscf_bohr_integral_threshold = 1e-11
+pyscf_angstrom_integral_threshold = 1e-9
 
 def test_overlap_all_angular_spherical_h2():
     molecule = read_xyz_content(
@@ -58,7 +58,7 @@ def test_overlap_all_angular_spherical_h2():
 
     ref_S = np.loadtxt(reference_directory / 'reference_overlap_all_angular_spherical_h2_data.txt')
 
-    np.testing.assert_allclose(test_S, ref_S, atol = pyscf_bohr_integral_threshold)
+    np.testing.assert_allclose(test_S, ref_S, rtol = 0, atol = pyscf_bohr_integral_threshold)
 
 def test_overlap_all_angular_cartesian_h2():
     molecule = read_xyz_content(
@@ -101,7 +101,7 @@ def test_overlap_all_angular_cartesian_h2():
 
     ref_S = np.loadtxt(reference_directory / 'reference_overlap_all_angular_cartesian_h2_data.txt')
 
-    np.testing.assert_allclose(test_S, ref_S, atol = pyscf_bohr_integral_threshold)
+    np.testing.assert_allclose(test_S, ref_S, rtol = 0, atol = pyscf_bohr_integral_threshold)
 
 def test_overlap_hof():
     molecule = read_xyz_content(
@@ -119,7 +119,7 @@ def test_overlap_hof():
 
     ref_S = np.loadtxt(reference_directory / 'reference_overlap_hof_data.txt')
 
-    np.testing.assert_allclose(test_S, ref_S, atol = pyscf_angstrom_integral_threshold)
+    np.testing.assert_allclose(test_S, ref_S, rtol = 0, atol = pyscf_angstrom_integral_threshold)
 
 def test_overlap_hof_distorted():
     molecule = read_xyz_content(
@@ -137,4 +137,4 @@ def test_overlap_hof_distorted():
 
     ref_S = np.loadtxt(reference_directory / 'reference_overlap_hof_distorted_data.txt')
 
-    np.testing.assert_allclose(test_S, ref_S, atol = pyscf_angstrom_integral_threshold)
+    np.testing.assert_allclose(test_S, ref_S, rtol = 0, atol = pyscf_angstrom_integral_threshold)
